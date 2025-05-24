@@ -27,10 +27,10 @@ jobs:
           wget -O ocgcore.zip https://github.com/mycard/ygopro-core/archive/refs/heads/master.zip
           wget -O script.zip https://github.com/mycard/ygopro-scripts/archive/refs/heads/master.zip
           wget -O srvpro.zip https://github.com/mycard/srvpro/archive/refs/heads/master.zip
-          unzip ygopro.zip
-          unzip ocgcore.zip
-          unzip script.zip
-          unzip srvpro.zip
+          unzip -o -qq ygopro.zip
+          unzip -o -qq ocgcore.zip
+          unzip -o -qq script.zip
+          unzip -o -qq srvpro.zip
           mkdir -p ygopro
           mkdir -p ygopro-bin
           mv -f ygopro-server/gframe ygopro/
@@ -76,6 +76,16 @@ jobs:
           make config=release
           mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm
       
+      - name: Build WindBot
+        run: |
+          sudo apt install mono-devel -y
+          wget -O windbot.zip https://github.com/mycard/windbot/archive/refs/heads/master.zip
+          unzip -o -qq windbot.zip
+          cd windbot-master/
+          xbuild /property:Configuration=Release /property:TargetFrameworkVersion="v4.6"
+          mv -f bin/Release ../windbot
+          cd .. && rm -rf windbot.zip windbot-master
+      
       - name: Organize Data
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
@@ -86,14 +96,15 @@ jobs:
           x86_64-linux-musl-strip  ygopro-bin/ygopro-amd64
           aarch64-linux-musl-strip ygopro-bin/ygopro-arm64
           arm-linux-musleabihf-strip ygopro-bin/ygopro-arm
-          cd ygopro/
-          rm -rf bin obj build event lua sqlite3
-          cd .. && mv -f ygopro srvpro/
+          mv -f ygopro srvpro/ && mv -f windbot srvpro/
+          cd srvpro/windbot/ && ln -s cards.cdb .
+          cd ../ygopro/ && rm -rf bin obj build event lua sqlite3
+      
       #
       #- name: Test Data
       #  run: |
       #    wget -O data.zip https://github.com/Unicorn369/ygoserver/releases/download/v0.0.1/test-data.zip
-      #    unzip data.zip
+      #    unzip -o -qq data.zip
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
