@@ -1,0 +1,120 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download musl-tools
+        run: |
+          mkdir -p /opt
+          wget -O tools.tar.xz https://github.com/Unicorn369/ygoserver/releases/download/v0.0.1/linux-musl-tools.tar.xz
+          tar xf tools.tar.xz
+          mv -f linux-musl-tools /opt/
+          rm -rf tools.tar.xz
+      
+      - name: Download Ygopro
+        run: |
+          wget -O ygopro.zip https://github.com/mycard/ygopro/archive/refs/heads/server.zip
+          wget -O ocgcore.zip https://github.com/mycard/ygopro-core/archive/refs/heads/master.zip
+          wget -O script.zip https://github.com/mycard/ygopro-scripts/archive/refs/heads/master.zip
+          wget -O srvpro.zip https://github.com/mycard/srvpro/archive/refs/heads/master.zip
+          unzip ygopro.zip
+          unzip ocgcore.zip
+          unzip script.zip
+          unzip srvpro.zip
+          mkdir -p ygopro
+          mkdir -p ygopro-bin
+          mv -f ygopro-server/gframe ygopro/
+          mv -f ygopro-server/cards.cdb ygopro/
+          mv -f ygopro-server/lflist.conf ygopro/
+          mv -f ygopro-server/strings.conf ygopro/
+          mv -f ygopro-core-master ocgcore
+          mv -f ygopro-scripts-master script
+          mv -f srvpro-master srvpro
+          rm -rf ygopro-server ygopro.zip ocgcore.zip script.zip srvpro.zip
+      
+      - name: Build Ygopro amd64
+        run: |
+          export PATH=$PATH:/opt/linux-musl-tools/bin
+          export CC=x86_64-linux-musl-cc
+          export CXX=x86_64-linux-musl-c++
+          cp -rf dep/* ygopro/
+          mv -f ocgcore ygopro/
+          mv -f script ygopro/
+          cd ygopro/
+          premake5 gmake --build-lua --build-event --build-sqlite
+          cd build/
+          make config=release
+          mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-amd64
+      
+      - name: Build Ygopro arm64
+        run: |
+          export PATH=$PATH:/opt/linux-musl-tools/bin
+          export CC=aarch64-linux-musl-cc
+          export CXX=aarch64-linux-musl-c++
+          cd ygopro/build/
+          rm -rf ../obj/
+          make config=release
+          mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm64
+      
+      - name: Build Ygopro arm
+        run: |
+          export PATH=$PATH:/opt/linux-musl-tools/bin
+          export CC=arm-linux-musleabihf-cc
+          export CXX=arm-linux-musleabihf-c++
+          cd ygopro/build/
+          rm -rf ../obj/
+          make config=release
+          mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm
+      
+      - name: Organize Data
+        run: |
+          export PATH=$PATH:/opt/linux-musl-tools/bin
+          cp -rf windbot.sh srvpro/
+          cp -rf pm2-docker-bot-yes.json srvpro/data/
+          cp -rf pm2-docker-bot-no.json srvpro/data/
+          cp -rf pm2-docker-bot-no.json srvpro/data/pm2-docker.json
+          x86_64-linux-musl-strip  ygopro-bin/ygopro-amd64
+          aarch64-linux-musl-strip ygopro-bin/ygopro-arm64
+          arm-linux-musleabihf-strip ygopro-bin/ygopro-arm
+          cd ygopro/
+          rm -rf bin obj build event lua sqlite3
+          cd .. && mv -f ygopro srvpro/
+      #
+      #- name: Test Data
+      #  run: |
+      #    wget -O data.zip https://github.com/Unicorn369/ygoserver/releases/download/v0.0.1/test-data.zip
+      #    unzip data.zip
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64, linux/arm64, linux/arm
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ygoserver:latest
+          build-args: |
+            SRVPRO_PATH=./srvpro
+            YGOPRO_PATH=./ygopro-bin
