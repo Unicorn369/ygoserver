@@ -1,9 +1,9 @@
 FROM node:lts-alpine AS builder
 ARG SRVPRO_PATH
-RUN mkdir -p /srvpro
-COPY ${SRVPRO_PATH}/package*.json /srvpro/
+RUN mkdir -p /ygoserver
+COPY ${SRVPRO_PATH}/package*.json /ygoserver/
 
-WORKDIR /srvpro
+WORKDIR /ygoserver
 RUN apk add --no-cache python3 make g++
 RUN npm install
 
@@ -13,16 +13,16 @@ ARG TARGETARCH
 ARG SRVPRO_PATH
 ARG YGOPRO_PATH
 
-COPY ${SRVPRO_PATH} /srvpro
-COPY ${YGOPRO_PATH}/ygopro-${TARGETARCH} /srvpro/ygopro/ygopro
+COPY ${SRVPRO_PATH} /ygoserver
+COPY ${YGOPRO_PATH}/ygopro-${TARGETARCH} /ygoserver/ygopro/ygopro
 
-WORKDIR /srvpro
+WORKDIR /ygoserver
 
-RUN chmod +x /srvpro/ygopro/ygopro
-RUN chmod +x /srvpro/windbot.sh
+RUN chmod +x /ygoserver/ygopro/ygopro
+RUN chmod +x /ygoserver/windbot.sh
 
 RUN npm install -g pm2
 
-COPY --from=builder /srvpro/node_modules ./node_modules
+COPY --from=builder /ygoserver/node_modules ./node_modules
 
-CMD [ "pm2-docker", "start", "/srvpro/data/pm2-docker.json" ]
+CMD [ "pm2-docker", "start", "/ygoserver/data/pm2-docker.json" ]

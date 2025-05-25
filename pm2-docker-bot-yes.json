@@ -1,14 +1,14 @@
 {
 	"apps": [
 		{
-			"name": "srvpro",
-			"script": "/srvpro/ygopro-server.js",
-			"cwd": "/srvpro"
+			"name": "ygoserver",
+			"script": "/ygoserver/ygopro-server.js",
+			"cwd": "/ygoserver"
 		},
 		{
 			"name": "windbot",
-			"script": "/srvpro/windbot/WindBot.exe",
-			"cwd": "/srvpro/windbot/",
+			"script": "/ygoserver/windbot/WindBot.exe",
+			"cwd": "/ygoserver/windbot/",
 			"args": "ServerMode=true ServerPort=2399",
 			"interpreter": "mono"
 		}

@@ -1,9 +1,9 @@
 {
 	"apps": [
 		{
-			"name": "srvpro",
-			"script": "/srvpro/ygopro-server.js",
-			"cwd": "/srvpro"
+			"name": "ygoserver",
+			"script": "/ygoserver/ygopro-server.js",
+			"cwd": "/ygoserver"
 		}
 	]
 }

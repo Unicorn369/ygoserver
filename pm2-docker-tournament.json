@@ -1,0 +1,14 @@
+{
+	"apps": [
+		{
+			"name": "ygoserver",
+			"script": "/ygoserver/ygopro-server.js",
+			"cwd": "/ygoserver"
+		},
+		{
+			"name": "ygoserver-tournament",
+			"script": "/ygoserver/ygopro-tournament.js",
+			"cwd": "/ygoserver"
+		}
+	]
+}

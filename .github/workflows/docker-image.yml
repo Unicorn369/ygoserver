@@ -21,7 +21,7 @@ jobs:
           mv -f linux-musl-tools /opt/
           rm -rf tools.tar.xz
       
-      - name: Download Ygopro
+      - name: Download Data
         run: |
           wget -O ygopro.zip https://github.com/mycard/ygopro/archive/refs/heads/server.zip
           wget -O ocgcore.zip https://github.com/mycard/ygopro-core/archive/refs/heads/master.zip
@@ -93,12 +93,13 @@ jobs:
           cp -rf pm2-docker-bot-yes.json srvpro/data/
           cp -rf pm2-docker-bot-no.json srvpro/data/
           cp -rf pm2-docker-bot-no.json srvpro/data/pm2-docker.json
+          cp -rf pm2-docker-tournament.json srvpro/data/pm2-docker-tournament.json
           x86_64-linux-musl-strip  ygopro-bin/ygopro-amd64
           aarch64-linux-musl-strip ygopro-bin/ygopro-arm64
           arm-linux-musleabihf-strip ygopro-bin/ygopro-arm
-          mv -f ygopro srvpro/ && mv -f windbot srvpro/
-          cd srvpro/windbot/ && ln -s cards.cdb .
-          cd ../ygopro/ && rm -rf bin obj build event lua sqlite3
+          rm -rf windbot/sqlite3.dll && zip -r windbot.zip windbot
+          mv -f windbot.zip srvpro/ && mv -f ygopro srvpro/
+          cd srvpro/ygopro/ && rm -rf bin obj build event lua sqlite3
       
       #
       #- name: Test Data
