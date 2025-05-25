@@ -1,6 +1,6 @@
 #!/bin/sh
 install_mono() {
-    if [ "$(uname -m)" = "arm" ]; then
+    if [ "$(cat /etc/apk/arch)" = "armv7" ]; then
         echo "arm: Not Supported"
     else
         echo "开始安装 MONO"
@@ -27,7 +27,7 @@ windbot_start() {
 windbot_stop() {
     echo "Config: 开始修改配置文件"
     cp -rf /ygoserver/data/pm2-docker-bot-no.json /ygoserver/data/pm2-docker.json
-    jq '.modules.windbot.enabled=true' /ygoserver/config/config.json > /ygoserver/config/config.json.tmp
+    jq '.modules.windbot.enabled=false' /ygoserver/config/config.json > /ygoserver/config/config.json.tmp
     mv -f /ygoserver/config/config.json.tmp /ygoserver/config/config.json
     echo "Config: 配置文件已变更，请重启Docker容器"
     echo "WindBot: 已禁用"
@@ -54,6 +54,6 @@ case "$1" in
         windbot_stop
         ;;
     *)
-        echo "\n请指定参数 (mono | start | stop)"
+        echo "请指定参数 (mono | start | stop)"
         ;;
 esac
