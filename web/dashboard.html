@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SRVPro Dashboard</title>
+<link rel="stylesheet" href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-y/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+<link href="http://srvpro.ygo233.com/static/style.css" rel="stylesheet">
+</head>
+<body>
+<header class="container">
+    <h1 class="title">SRVPro Dashboard</h1>
+</header>
+<div class="container">
+    <div class="row grid">
+        <div class="col-lg-1" style="width:122px;">
+            <select class="form-control" id="http">
+                <option value ="http">HTTP</option>
+                <option value ="https">HTTPS</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <input type="text" class="form-control" id="ip" value="" placeholder="IP">
+        </div>
+        <div class="col-lg-1">
+            <input type="text" class="form-control" id="port" value="" placeholder="port">
+        </div>
+        <div class="col-lg-2">
+            <input type="text" class="form-control" id="username" value="" placeholder="username">
+        </div>
+        <div class="col-lg-2">
+            <input type="password" class="form-control" id="password" value="" placeholder="password">
+        </div>
+        <div class="col-lg-3">
+            <button class="btn btn-default" id="open_button">刷新</button>
+            <button class="btn btn-default" id="auto_button">自动刷新</button>
+            共有<span id="num">0</span>个房间
+        </div>
+    </div>
+    <div class="row buttons">
+        <div class="col-lg-12">
+            <input type="text" class="form-control" id="shout" value="" placeholder="喊话">
+        </div>
+    </div>
+    <div class="row buttons">
+        <div class="col-lg-12">
+            <button class="btn btn-default" id="shout_button" data-toggle="tooltip" title="向全服所有房间喊话">喊话</button>
+            <button class="btn btn-default" id="stop_button" data-toggle="tooltip" title="停止新建房间，不影响现有的房间">停服</button>
+            <button class="btn btn-default" id="start_button" data-toggle="tooltip" title="允许新建房间，不影响现有的房间">开服</button>
+            <button class="btn btn-default" id="welcome_button" data-toggle="tooltip" title="更改欢迎信息">欢迎</button>
+            <button class="btn btn-default" id="tips_button" data-toggle="tooltip" title="刷新提示信息">提示</button>
+            <button class="btn btn-default" id="dialogues_button" data-toggle="tooltip" title="刷新台词信息">台词</button>
+            <button class="btn btn-default" id="ban_button" data-toggle="tooltip" title="封禁玩家">封禁</button>
+            <button class="btn btn-default" id="kick_button" data-toggle="tooltip" title="中止指定房间的决斗，输入房间号为指定房间，输入 all 为全部房间">中止</button>
+            <button class="btn btn-default" id="death_button" data-toggle="tooltip" title="开始加时赛，输入房间号为指定房间，不输入为全部房间">加时赛</button>
+            <button class="btn btn-default" id="deathcancel_button" data-toggle="tooltip" title="取消加时赛，输入房间号为指定房间，不输入为全部房间">取消加时赛</button>
+            <button class="btn btn-default" id="reboot_button" data-toggle="tooltip" title="强制重启服务器，中断所有房间">重启服务器</button>
+            <span id="message_callback"></span>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <hr>
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-striped" id="rooms">
+                <thead>
+                    <th width="5%">房号</th>
+                    <th width="10%">房名</th>
+                    <th width="35%">玩家</th>
+                    <th width="35%">玩家</th>
+                    <th width="15%">状态</th>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="/static/jquery.js"></script>
+<script src="/static/bootstrap.js"></script>
+<script>
+$(function(){
+    $("body").tooltip({selector: "[data-toggle='tooltip']", trigger: "hover"});
+    $("#open_button").click(loadrooms);
+    $("#auto_button").click(autoload);
+    $("#shout_button").click(shout);
+    $("#stop_button").click(stop);
+    $("#start_button").click(start);
+    $("#welcome_button").click(welcome);
+    $("#tips_button").click(load_tips);
+    $("#dialogues_button").click(load_dialogues);
+    $("#ban_button").click(ban_player);
+    $("#kick_button").click(kick_room);
+    $("#death_button").click(start_death);
+    $("#deathcancel_button").click(cancel_death);
+    $("#reboot_button").click(reboot);
+    var params=parseQueryString();
+    $("#ip").val("127.0.0.1");
+    $("#port").val("7922");
+	$("#username").val("root");
+    $("#password").val("123456");
+});
+
+function parseQueryString() {
+    //http://stackoverflow.com/questions/523266/how-can-i-get-a-specific-parameter-from-location-search
+    var str = window.location.search;
+    var objURL = {};
+    str.replace(
+        new RegExp( "([^?=&]+)(=([^&]*))?", "g" ),
+        function( $0, $1, $2, $3 ){
+            objURL[ $1 ] = $3;
+        }
+    );
+    return objURL;
+}
+
+function get_http() {
+    return $("#http").val() + "://" + $("#ip").val() + ($("#port").val() ? (":" + $("#port").val()) : "");
+}
+
+function get_value(name) { 
+    return encodeURIComponent($(name).val());
+}
+
+function loadrooms() {
+    var url=get_http() + "/api/getrooms?callback=?"+ (get_value("#username") ? "&username="+get_value("#username") : "") + (get_value("#password") ? "&pass="+get_value("#password") : "");
+	//alert(url);
+	
+	
+    $.getJSON(url, listroom);
+    $("#open_button").removeClass("btn-success");
+}
+
+function autoload() {
+    if (window.autoLoad) {
+        window.clearInterval(window.autoLoad);
+        window.autoLoad=false;
+        $("#message_callback").text("OFF");
+    }
+    else {
+        /*if (!get_value("#password")) {
+            alert("请输入密码");
+            return;
+        }*/
+        $("#message_callback").text("ON");
+        window.autoLoad=window.setInterval(loadrooms,1000);
+    }
+}
+
+function playerinfo(player, mode) {
+    if (!player)
+        return "";
+    var info = player.name;
+    if (player.status) {
+        var status = "";
+        if (mode == 1)
+            status = status + "Score: " + player.status.score + " " ;
+        if (mode != 2 || player.pos % 2 == 0)
+            status = status + "LP: "+ player.status.lp;
+        if (mode != 2 && player.status.cards)
+            status = status + " Cards: "+ player.status.cards;
+        if (status != "")
+            info = info + " <em>(" + status + ")</em>";
+    }
+    if (player.ip)
+        info = info +"<br><code>IP: " + player.ip + "</code>";
+    return info;
+}
+
+function listroom(data) {
+
+    $("#open_button").addClass("btn-success");
+    $("#num").text(data.rooms.length);
+    var tbody=$("<tbody></tbody>");
+    for (i in data.rooms) {
+        var room=data.rooms[i];
+        var tr=$("<tr></tr>");
+        
+        room.duelers=[];
+        room.watchers=[];
+        for (j in room.users) {
+            if (room.users[j].pos==7) {
+                room.watchers.push(room.users[j]);
+            }
+            else {
+                room.duelers.push(room.users[j]);
+            }
+        }
+
+        
+        tr.append($("<td>"+room.roomid+"</td>"));
+        tr.append($("<td>"+ ((room.needpass == "true") ? "<span class='glyphicon glyphicon-lock'></span>" : "") + room.roomname+ "</td>"));
+
+        if (room.roommode != 2) {
+            tr.append($("<td>"+playerinfo(room.duelers[0], room.roommode)+"</td>"));
+            tr.append($("<td>"+playerinfo(room.duelers[1], room.roommode)+"</td>"));
+        }
+        else {
+            tr.append($("<td>"+playerinfo(room.duelers[0], 2)+"<br>"+playerinfo(room.duelers[1], 2)+"</td>"));
+            tr.append($("<td>"+playerinfo(room.duelers[2], 2)+"<br>"+playerinfo(room.duelers[3], 2)+"</td>"));
+        }
+        
+        var watchlist="";
+        
+        if (room.watchers.length) {
+            for (j in room.watchers) {
+                watchlist+=room.watchers[j].name+"\r\n";
+            }
+        }
+        
+        tr.append($("<td>"+ (watchlist ? "<span class='glyphicon glyphicon-eye-open' data-toggle='tooltip' title='" + watchlist + "'></span>" : "") + room.istart +"</td>"));
+        
+        tbody.append(tr);
+    }
+    $("#rooms tbody").remove();
+    $("#rooms").append(tbody);
+}
+
+function shout() {
+    $("#message_callback").text('...');
+    var url=get_http() + "/api/message?shout=" + get_value("#shout") + "&username="+get_value("#username")+"&pass=" + get_value("#password") + "&callback=?";
+    $.getJSON(url, shoutcallback);
+}
+function stop() {
+    if (confirm("您确定要停止服务器吗?")) {
+        $("#message_callback").text('...');
+        var url=get_http() + "/api/message?stop=" + get_value("#shout") + "&username="+get_value("#username")+ "&pass=" + get_value("#password") + "&callback=?";
+        $.getJSON(url, shoutcallback);
+    }
+}
+function start() {
+    if (confirm("您确定要开启服务器吗?")) {
+        $("#message_callback").text('...');
+        var url=get_http() + "/api/message?stop=false" + "&username="+get_value("#username")+ "&pass=" + get_value("#password") + "&callback=?";
+        $.getJSON(url, shoutcallback);
+    }
+}
+function welcome() {
+    if (get_value("#shout").length) {
+        $("#message_callback").text('...');
+        var url=get_http() + "/api/message?welcome=" + get_value("#shout") + "&username="+get_value("#username")+"&pass=" + get_value("#password") + "&callback=?";
+        $.getJSON(url, shoutcallback);
+    }
+    else {
+        $("#message_callback").text('...');
+        var url=get_http() + "/api/message?getwelcome=1&pass=" + get_value("#password") + "&username="+get_value("#username")+ "&callback=?";
+        $.getJSON(url, shoutcallback);
+    }
+}
+function load_tips() {
+    $("#message_callback").text('...');
+    var url=get_http() + "/api/message?loadtips=1&pass=" + get_value("#password") + "&username="+get_value("#username") + "&callback=?";
+    $.getJSON(url, shoutcallback);
+}
+function load_dialogues() {
+    $("#message_callback").text('...');
+    var url=get_http() + "/api/message?loaddialogues=1&pass=" + get_value("#password") +"&username="+get_value("#username") +"&callback=?";
+    $.getJSON(url, shoutcallback);
+}
+function ban_player() {
+    if (confirm("你确定要封禁这个玩家吗?")) {
+        $("#message_callback").text('...');
+        var url=get_http() + "/api/message?ban=" + get_value("#shout") + "&pass=" + get_value("#password") +"&username="+get_value("#username") +"&callback=?";
+        $.getJSON(url, shoutcallback);
+    }
+}
+function kick_room() {
+    if (confirm("你确定要中止这场决斗吗?")) {
+        $("#message_callback").text('...');
+        var url=get_http() + "/api/message?kick=" + get_value("#shout") + "&pass=" + get_value("#password") + "&username="+get_value("#username") +"&callback=?";
+        $.getJSON(url, shoutcallback);
+    }
+}
+function start_death() {
+    if (confirm("你确定要开启加时赛吗?")) {
+        if (get_value("#shout").length) {
+            $("#message_callback").text('...');
+            var url=get_http() + "/api/message?death=" + get_value("#shout") + "&pass=" + get_value("#password") +"&username="+get_value("#username") +"&callback=?";
+            $.getJSON(url, shoutcallback);
+        }
+        else {
+            $("#message_callback").text('...');
+            var url=get_http() + "/api/message?death=all&pass=" + get_value("#password") + "&username="+get_value("#username") +"&callback=?";
+            $.getJSON(url, shoutcallback);
+        }
+    }
+}
+function cancel_death() {
+    if (confirm("您确定要取消加时赛吗?")) {
+        if (get_value("#shout").length) {
+            $("#message_callback").text('...');
+            var url=get_http() + "/api/message?deathcancel=" + get_value("#shout") + "&pass=" + get_value("#password") + "&username="+get_value("#username") +"&callback=?";
+            $.getJSON(url, shoutcallback);
+        }
+        else {
+            $("#message_callback").text('...');
+            var url=get_http() + "/api/message?deathcancel=all&pass=" + get_value("#password") + "&username="+get_value("#username") +"&callback=?";
+            $.getJSON(url, shoutcallback);
+        }
+    }
+}
+function reboot() {
+    if (confirm("您确定要重启服务器吗?")) {
+        $("#message_callback").text('...');
+        var url=get_http() + "/api/message?reboot=1&pass=" + get_value("#password") + "&username="+get_value("#username") + "&callback=?";
+        $.getJSON(url, shoutcallback);
+    }
+}
+
+function shoutcallback(data) {
+    $("#message_callback").text(data[0]);
+    if (data[1]) {
+        $("#shout").val(data[1]);
+    }
+}
+
+</script>
+</body>
+</html>

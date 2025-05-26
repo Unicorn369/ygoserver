@@ -25,4 +25,5 @@ RUN npm install -g pm2
 
 COPY --from=builder /ygoserver/node_modules ./node_modules
 
+ENTRYPOINT [ "/init" ]
 CMD [ "pm2-docker", "start", "/ygoserver/data/pm2-docker.json" ]

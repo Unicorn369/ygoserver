@@ -4,6 +4,11 @@
 			"name": "ygoserver",
 			"script": "/ygoserver/ygopro-server.js",
 			"cwd": "/ygoserver"
+		},
+		{
+			"name": "webserver",
+			"script": "/ygoserver/webserver/webserver.js",
+			"cwd": "/ygoserver/webserver"
 		}
 	]
 }

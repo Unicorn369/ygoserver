@@ -11,6 +11,11 @@
 			"cwd": "/ygoserver/windbot/",
 			"args": "ServerMode=true ServerPort=2399",
 			"interpreter": "mono"
+		},
+		{
+			"name": "webserver",
+			"script": "/ygoserver/webserver/webserver.js",
+			"cwd": "/ygoserver/webserver"
 		}
 	]
 }

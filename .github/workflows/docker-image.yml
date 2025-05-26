@@ -89,6 +89,7 @@ jobs:
       - name: Organize Data
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
+          cp -rf web srvpro/
           cp -rf windbot.sh srvpro/
           cp -rf pm2-docker-bot-yes.json srvpro/data/
           cp -rf pm2-docker-bot-no.json srvpro/data/

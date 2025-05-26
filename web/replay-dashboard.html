@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SRVPro Replay Dashboard</title>
+<link rel="stylesheet" href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-y/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+<link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+<header class="container">
+    <h1 class="title">SRVPro 竞赛模式录像管理</h1>
+</header>
+<div class="container">
+    <div class="row grid">
+        <div class="col-lg-2">
+            <select class="form-control" id="http">
+                <option value ="http">HTTP</option>
+                <option value ="https">HTTPS</option>
+            </select>
+        </div>
+        <div class="col-lg-3">
+            <input type="text" class="form-control" id="ip" value="" placeholder="IP">
+        </div>
+        <div class="col-lg-1">
+            <input type="text" class="form-control" id="port" value="" placeholder="port">
+        </div>
+        <div class="col-lg-3">
+            <input type="text" class="form-control" id="username" value="" placeholder="username">
+        </div>
+        <div class="col-lg-3">
+            <input type="password" class="form-control" id="password" value="" placeholder="password">
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="row buttons">
+        <div class="col-lg-4">
+            <button class="btn btn-default" id="open_button">刷新</button>
+            <button class="btn btn-default" id="empty_button">清空记录</button>
+            <button class="btn btn-default" id="pack_button">打包下载录像</button>
+            共有<span id="num">0</span>场决斗
+        </div>
+        <div class="col-lg-3">
+            <input type="text" class="form-control" id="roomname" value="" placeholder="房名">
+        </div>
+        <div class="col-lg-1">
+            <input type="text" class="form-control" id="duelcount" value="" placeholder="单局数">
+        </div>
+        <div class="col-lg-3">
+            <input type="text" class="form-control" id="playername" value="" placeholder="玩家名">
+        </div>
+        <div class="col-lg-1">
+            <input type="text" class="form-control" id="score" value="" placeholder="分数">
+        </div>
+    </div>
+</div>
+<div class="container">
+    <hr>
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-striped" id="rooms">
+                <thead>
+                    <th width="15%">时间</th>
+                    <th width="15%">房名</th>
+                    <th width="25%">玩家</th>
+                    <th width="25%">玩家</th>
+                    <th width="10%" data-toggle="tooltip" data-container="body" title="MATCH打完才可以观看">云录像</th>
+                    <th width="10%">下载录像</th>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="/static/jquery.js"></script>
+<script src="/static/bootstrap.js"></script>
+<script>
+$(function(){
+    $("body").tooltip({selector: "[data-toggle='tooltip']", trigger: "hover"});
+    $("#open_button").click(loadreplays);
+    $("#empty_button").click(clearreplays);
+    $("#pack_button").click(packreplays);
+    //$("#welcome_button").click(welcome);
+    var params=parseQueryString();
+    $("#ip").val("127.0.0.1");
+    $("#port").val("7922");
+	$("#username").val("root");
+    $("#password").val("123456");
+    $("#roomname").val(params["roomname"]);
+    $("#duelcount").val(params["duelcount"]);
+    $("#playername").val(params["playername"]);
+	$("#score").val(params["score"]);
+});
+
+function parseQueryString() {
+    //http://stackoverflow.com/questions/523266/how-can-i-get-a-specific-parameter-from-location-search
+    var str = window.location.search;
+    var objURL = {};
+    str.replace(
+        new RegExp( "([^?=&]+)(=([^&]*))?", "g" ),
+        function( $0, $1, $2, $3 ){
+            objURL[ $1 ] = $3;
+        }
+    );
+    return objURL;
+}
+
+function get_http() { 
+    return $("#http").val() + "://" + $("#ip").val() + ($("#port").val() ? (":" + $("#port").val()) : "");
+}
+
+function get_value(name) { 
+    return encodeURIComponent($(name).val());
+}
+
+function getPossibleTextValue(fieldName, queryKey) {
+    const fullFieldName = `#${fieldName}`;
+    const realQueryKey = queryKey || fieldName;
+    return (get_value(fullFieldName) ? `&${realQueryKey}=${get_value(fullFieldName)}` : "");
+}
+
+function loadreplays() {
+    var url=get_http() + "/api/duellog?callback=?"+ getPossibleTextValue("username") + getPossibleTextValue("password", "pass") + getPossibleTextValue("roomname") + getPossibleTextValue("duelcount") + getPossibleTextValue("playername") + getPossibleTextValue("score");
+    $.getJSON(url, listreplay);
+    $("#open_button").removeClass("btn-success");
+}
+
+function clearreplays() {
+    if (confirm("确实要清空记录吗？")) {
+        var url=get_http() + "/api/clearlog?callback=?"+ getPossibleTextValue("username") + getPossibleTextValue("password", "pass");
+        $.getJSON(url, clearreplays_success);
+        $("#empty_button").removeClass("btn-success");
+    }
+}
+
+function packreplays() {
+    window.open(get_http() + "/api/archive.zip?placeholder=1"+ getPossibleTextValue("username") + getPossibleTextValue("password", "pass") + getPossibleTextValue("roomname") + getPossibleTextValue("duelcount") + getPossibleTextValue("playername")) + getPossibleTextValue("score");
+}
+
+function clearreplays_success() {
+    $("#empty_button").addClass("btn-success");
+    $("#num").text(0);
+    $("#rooms tbody").remove();
+    $("#rooms").append($("<tbody></tbody>"));
+}
+
+function listreplay(data) {
+
+    $("#open_button").addClass("btn-success");
+    $("#num").text(data.length);
+    var tbody=$("<tbody></tbody>");
+    for (i in data) {
+        var duellog=data[i];
+        var tr=$("<tr></tr>");
+                
+        tr.append($("<td>"+duellog.time+"</td>"));
+        tr.append($("<td>"+duellog.name+"</td>"));
+
+        if(duellog.roommode != 2) {
+            tr.append($("<td>"+((duellog.players) ? (duellog.players[0].winner ? "<span class='glyphicon glyphicon-bookmark'></span> " : "") + duellog.players[0].name : "")+"</td>"));
+            tr.append($("<td>"+((duellog.players) ? (duellog.players[1].winner ? "<span class='glyphicon glyphicon-bookmark'></span> " : "") + duellog.players[1].name : "")+"</td>"));
+        } else {
+            tr.append($("<td>"+((duellog.players) ? (duellog.players[0].winner ? "<span class='glyphicon glyphicon-bookmark'></span> " : "") + duellog.players[0].name + "<br>" + duellog.players[1].name : "")+"</td>"));
+            tr.append($("<td>"+((duellog.players) ? (duellog.players[2].winner ? "<span class='glyphicon glyphicon-bookmark'></span> " : "") + duellog.players[2].name + "<br>" + duellog.players[3].name : "")+"</td>"));
+        }
+        tr.append($("<td>"+duellog.cloud_replay_id+"</td>"));
+        tr.append($("<td><a href='"+get_http() + "/api/replay/"+duellog.replay_filename+"?username="+get_value("#username")+"&pass="+get_value("#password")+"' download><span class='glyphicon glyphicon-download-alt'></span></a></td>"));
+
+        
+        tbody.append(tr);
+    }
+    $("#rooms tbody").remove();
+    $("#rooms").append(tbody);
+}
+
+</script>
+</body>
+</html>
