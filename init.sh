@@ -1,4 +1,6 @@
 #!/bin/sh
+SRVPRO_PATH=/ygoserver
+SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-bot-no.json
 
 install_mono() {
     if [ "$(cat /etc/apk/arch)" = "armv7" ]; then
@@ -10,46 +12,168 @@ install_mono() {
     fi
 }
 
-windbot_start() {
-    if [ ! -d "/ygoserver/windbot" ]; then
-        unzip -o -qq /ygoserver/windbot.zip -d /ygoserver/
-    fi
-    if [ ! -f "/ygoserver/windbot/cards.cdb" ]; then
-        ln -s /ygoserver/ygopro/cards.cdb /ygoserver/windbot/cards.cdb
-    fi
-    echo "Config: 开始修改配置文件"
-    cp -rf /ygoserver/data/pm2-docker-bot-yes.json /ygoserver/data/pm2-docker.json
-    jq '.modules.windbot.enabled=true' /ygoserver/config/config.json > /ygoserver/config/config.json.tmp
-    mv -f /ygoserver/config/config.json.tmp /ygoserver/config/config.json
-    echo "Config: 配置文件已变更，请重启Docker容器"
-    echo "WindBot: 已启用"
+set_config() {
+    jq $1 "$SRVPRO_PATH/config/config.json" > "$SRVPRO_PATH/config/config.json.tmp"
+    mv -f "$SRVPRO_PATH/config/config.json.tmp" "$SRVPRO_PATH/config/config.json"
 }
 
-windbot_stop() {
-    echo "Config: 开始修改配置文件"
-    cp -rf /ygoserver/data/pm2-docker-bot-no.json /ygoserver/data/pm2-docker.json
-    jq '.modules.windbot.enabled=false' /ygoserver/config/config.json > /ygoserver/config/config.json.tmp
-    mv -f /ygoserver/config/config.json.tmp /ygoserver/config/config.json
-    echo "Config: 配置文件已变更，请重启Docker容器"
-    echo "WindBot: 已禁用"
+set_config_admin() {
+    jq $1 "$SRVPRO_PATH/config/admin_user.json" > "$SRVPRO_PATH/config/admin_user.json.tmp"
+    mv -f "$SRVPRO_PATH/config/admin_user.json.tmp" "$SRVPRO_PATH/config/admin_user.json"
+}
+
+run_server() {
+  pm2-docker start $SRVPRO_SCRIPT
 }
 
 # 检测文件是否存在
-if [ ! -f "/ygoserver/config/config.json" ]; then
-    cp -rf /ygoserver/data/default_config.json /ygoserver/config/config.json
+if [ ! -f "$SRVPRO_PATH/config/config.json" ]; then
+    mkdir -p $SRVPRO_PATH/config/
+    cp -rf "$SRVPRO_PATH/data/default_config.json" "$SRVPRO_PATH/config/config.json"
+fi
+if [ ! -f "$SRVPRO_PATH/config/admin_user.json" ]; then
+    mkdir -p $SRVPRO_PATH/config/
+    jq .users "$SRVPRO_PATH/data/default_data.json" > "$SRVPRO_PATH/config/admin_user.json"
+fi
+if [ ! -f "$SRVPRO_PATH/windbot/cards.cdb" ]; then
+    ln -s "$SRVPRO_PATH/ygopro/cards.cdb" "$SRVPRO_PATH/windbot/cards.cdb"
 fi
 
-case "$1" in
-    mono)
-        install_mono
-        ;;
-    start)
-        windbot_start
-        ;;
-    stop)
-        windbot_stop
-        ;;
-    *)
-        echo "请指定参数 (mono | start | stop)"
-        ;;
-esac
+for arg in "$@"; do
+    case $arg in
+        --install-mono|mono)
+            install_mono
+            shift
+            ;;
+        --default)
+            SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-bot-no.json
+            ;;
+        --ygo-web=*)
+            key="${arg#*=}"
+            if [ "$key" = "true" ]; then
+                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-web-bot-no.json
+            fi
+            set_config_admin ".users.root.enabled=$key"
+            ;;
+        --ygo-web-passwd=*)
+            key="${arg#*=}"
+            set_config_admin ".users.root.password=\"$key\""
+            ;;
+        --ygo-windbot=*)
+            key="${arg#*=}"
+            if [ "$key" = "true" ]; then
+                install_mono
+                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-bot-yes.json
+            fi
+            if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
+                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-web-bot-yes.json
+            fi
+            ;;
+        --ygo-lflist=*)
+            key="${arg#*=}"
+            set_config ".hostinfo.lflist=$key"
+            ;;
+        --ygo-rule=*)
+            key="${arg#*=}"
+            set_config ".hostinfo.rule=$key"
+            ;;
+        --ygo-mode=*)
+            key="${arg#*=}"
+            set_config ".hostinfo.mode=$key"
+            ;;
+        --ygo-duel-rule=*)
+            key="${arg#*=}"
+            set_config ".hostinfo.duel_rule=$key"
+            ;;
+        --ygo-lp=*)
+            key="${arg#*=}"
+            set_config ".hostinfo.start_lp=$key"
+            ;;
+        --ygo-start-hand=*)
+            key="${arg#*=}"
+            set_config ".hostinfo.start_hand=$key"
+            ;;
+        --ygo-draw-count=*)
+            key="${arg#*=}"
+            set_config ".hostinfo.draw_count=$key"
+            ;;
+        --ygo-time=*)
+            key="${arg#*=}"
+            set_config ".hostinfo.time_limit=$key"
+            ;;
+        --welcome=*)
+            key="${arg#*=}"
+            set_config ".modules.welcome=\"$key\""
+            ;;
+        --tips-url=*)
+            key="${arg#*=}"
+            set_config ".modules.tips.get=\"$key\""
+            ;;
+        --dialogues-url=*)
+            key="${arg#*=}"
+            set_config ".modules.dialogues.get=\"$key\""
+            ;;
+        --random-duel=*)
+            key="${arg#*=}"
+            set_config ".modules.random_duel.enabled=$key"
+            ;;
+        --cloud-replay=*)
+            key="${arg#*=}"
+            set_config ".modules.mysql.enabled=$key"
+            set_config ".modules.cloud_replay.enabled=$key"
+            ;;
+        --mysql-host=*)
+            key="${arg#*=}"
+            set_config ".modules.mysql.db.host=\"$key\""
+            ;;
+        --mysql-port=*)
+            key="${arg#*=}"
+            set_config ".modules.mysql.db.port=$key"
+            ;;
+        --mysql-user=*)
+            key="${arg#*=}"
+            set_config ".modules.mysql.db.username=\"$key\""
+            ;;
+        --mysql-passwd=*)
+            key="${arg#*=}"
+            set_config ".modules.mysql.db.password=\"$key\""
+            ;;
+        --mysql-db=*)
+            key="${arg#*=}"
+            set_config ".modules.mysql.db.database=\"$key\""
+            ;;
+        --windbot=*)
+            key="${arg#*=}"
+            set_config ".modules.windbot.enabled=$key"
+            ;;
+        --windbot-port=*)
+            key="${arg#*=}"
+            set_config ".modules.windbot.port=$key"
+            ;;
+        --windbot-ip=*)
+            key="${arg#*=}"
+            set_config ".modules.windbot.server_ip=\"$key\""
+            set_config ".modules.windbot.my_ip=\"$(hostname -i)\""
+            ;;
+        --tournament=*)
+            if [ "$key" = "true" ]; then
+                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-tournament.json
+            fi
+            if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
+                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-web-tournament.json
+            fi
+            key="${arg#*=}"
+            set_config ".modules.tournament_mode.enabled=$key"
+            ;;
+        --default-script=*)
+            key="${arg#*=}"
+            SRVPRO_SCRIPT=$key
+            ;;
+        -*|--*)
+            echo "Illegal option $1"
+            ;;
+    esac
+    shift
+done
+
+run_server

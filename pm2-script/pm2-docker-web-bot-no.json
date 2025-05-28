@@ -7,8 +7,8 @@
 		},
 		{
 			"name": "webserver",
-			"script": "/ygoserver/webserver/webserver.js",
-			"cwd": "/ygoserver/webserver"
+			"script": "/ygoserver/web/webserver.js",
+			"cwd": "/ygoserver/web"
 		}
 	]
 }

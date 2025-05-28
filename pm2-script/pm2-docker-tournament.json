@@ -9,11 +9,6 @@
 			"name": "ygoserver-tournament",
 			"script": "/ygoserver/ygopro-tournament.js",
 			"cwd": "/ygoserver"
-		},
-		{
-			"name": "webserver",
-			"script": "/ygoserver/webserver/webserver.js",
-			"cwd": "/ygoserver/webserver"
 		}
 	]
 }

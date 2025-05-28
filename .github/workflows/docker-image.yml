@@ -90,22 +90,18 @@ jobs:
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
           cp -rf web srvpro/
-          cp -rf windbot.sh srvpro/
-          cp -rf pm2-docker-bot-yes.json srvpro/data/
-          cp -rf pm2-docker-bot-no.json srvpro/data/
-          cp -rf pm2-docker-bot-no.json srvpro/data/pm2-docker.json
-          cp -rf pm2-docker-tournament.json srvpro/data/pm2-docker-tournament.json
+          cp -rf pm2-script srvpro/
           x86_64-linux-musl-strip  ygopro-bin/ygopro-amd64
           aarch64-linux-musl-strip ygopro-bin/ygopro-arm64
           arm-linux-musleabihf-strip ygopro-bin/ygopro-arm
-          rm -rf windbot/sqlite3.dll && zip -r windbot.zip windbot
-          mv -f windbot.zip srvpro/ && mv -f ygopro srvpro/
+          rm -rf windbot/sqlite3.dll
+          mv -f windbot srvpro/ && mv -f ygopro srvpro/
           cd srvpro/ygopro/ && rm -rf bin obj build event lua sqlite3
       
       #
       #- name: Test Data
       #  run: |
-      #    wget -O data.zip https://github.com/Unicorn369/ygoserver/releases/download/v0.0.1/test-data.zip
+      #    wget -O data.zip https://github.com/Unicorn369/ygoserver/releases/download/v0.0.1/data.zip
       #    unzip -o -qq data.zip
 
       - name: Setup QEMU
@@ -131,3 +127,4 @@ jobs:
           build-args: |
             SRVPRO_PATH=./srvpro
             YGOPRO_PATH=./ygopro-bin
+            INIT_FILE_PATH=./init.sh
