@@ -10,4 +10,5 @@ WORKDIR /windbot
 RUN apk add --no-cache mono
 
 EXPOSE 2399
-CMD [ "mono", "WindBot.exe", "ServerMode=true", "ServerPort=2399" ]
+ENTRYPOINT [ "mono", "WindBot.exe" ]
+CMD [ "ServerMode=true", "ServerPort=2399" ]
