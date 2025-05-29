@@ -34,26 +34,30 @@ jobs:
           mkdir -p ygopro
           mkdir -p ygopro-bin
           mv -f ygopro-server/gframe ygopro/
-          mv -f ygopro-server/cards.cdb ygopro/
           mv -f ygopro-server/lflist.conf ygopro/
           mv -f ygopro-server/strings.conf ygopro/
           mv -f ygopro-core-master ocgcore
           mv -f ygopro-scripts-master script
           mv -f srvpro-master srvpro
           rm -rf ygopro-server ygopro.zip ocgcore.zip script.zip srvpro.zip
+
+      - name: Build Ygopro Init
+        run: |
+          export PATH=$PATH:/opt/linux-musl-tools/bin
+          cp -rf dep/* ygopro/
+          mv -f ocgcore ygopro/
+          mv -f script ygopro/
+          cd ygopro/
+          premake5 gmake --build-lua --build-event --build-sqlite
       
       - name: Build Ygopro amd64
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
           export CC=x86_64-linux-musl-cc
           export CXX=x86_64-linux-musl-c++
-          cp -rf dep/* ygopro/
-          mv -f ocgcore ygopro/
-          mv -f script ygopro/
-          cd ygopro/
-          premake5 gmake --build-lua --build-event --build-sqlite
-          cd build/
-          make config=release
+          cd ygopro/build/
+          rm -rf ../bin/ ../obj/
+          make config=release -j$(grep -c "processor" /proc/cpuinfo)
           mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-amd64
       
       - name: Build Ygopro arm64
@@ -62,8 +66,8 @@ jobs:
           export CC=aarch64-linux-musl-cc
           export CXX=aarch64-linux-musl-c++
           cd ygopro/build/
-          rm -rf ../obj/
-          make config=release
+          rm -rf ../bin/ ../obj/
+          make config=release -j$(grep -c "processor" /proc/cpuinfo)
           mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm64
       
       - name: Build Ygopro arm
@@ -72,8 +76,8 @@ jobs:
           export CC=arm-linux-musleabihf-cc
           export CXX=arm-linux-musleabihf-c++
           cd ygopro/build/
-          rm -rf ../obj/
-          make config=release
+          rm -rf ../bin/ ../obj/
+          make config=release -j$(grep -c "processor" /proc/cpuinfo)
           mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm
       
       - name: Build WindBot
@@ -90,13 +94,16 @@ jobs:
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
           cp -rf web srvpro/
-          cp -rf pm2-script srvpro/
+          cp -rf data-start srvpro/
           x86_64-linux-musl-strip  ygopro-bin/ygopro-amd64
           aarch64-linux-musl-strip ygopro-bin/ygopro-arm64
           arm-linux-musleabihf-strip ygopro-bin/ygopro-arm
           rm -rf windbot/sqlite3.dll
           mv -f windbot srvpro/ && mv -f ygopro srvpro/
-          cd srvpro/ygopro/ && rm -rf bin obj build event lua sqlite3
+          cd srvpro/ygopro/
+          rm -rf bin obj build event lua sqlite3 ocgcore
+          wget -O cards.cdb https://github.com/mycard/ygopro-database/raw/refs/heads/master/locales/zh-CN/cards.cdb
+          ls gframe | sed '/game.cpp/d' | xargs -I {} rm -rf gframe/{}
       
       #
       #- name: Test Data

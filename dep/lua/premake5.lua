@@ -5,9 +5,6 @@ project "lua"
     files { "src/*.c", "src/*.h" }
     removefiles { "src/lua.c", "src/luac.c", "src/linit.c", "src/onelua.c" }
 
-    filter "not action:vs*"
-        buildoptions { "-x c++" }
-
     filter "configurations:Debug"
         defines { "LUA_USE_APICHECK" }
 

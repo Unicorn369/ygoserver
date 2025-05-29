@@ -6,7 +6,7 @@
 ## 安装运行
 终端执行命令
 ```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=YGOServer --restart=always yunikon525/ygoserver
+docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver
 ```
 
 ## 参数说明
@@ -20,12 +20,12 @@ docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD
    * 如果你安装了[windbot容器](https://hub.docker.com/r/yunikon525/windbot)，则请勿使用此参数
  * --ygo-lflist=
    * `--ygo-lflist=0` 设置房间默认使用第1个禁卡表
- * --ygo-rule=
-   * 0：OCG，1：TCG，2：简中，3：自定义，4：无独有卡，5：允许所有卡
-   * `--ygo-rule=0` 设置房间默认只允许OCG
  * --ygo-mode=
    * 0：单局，1：比赛，2：双打
    * `--ygo-mode=0` 设置房间默认为单局模式
+ * --ygo-card-rule=
+   * 0：OCG，1：TCG，2：简中，3：自定义，4：无独有卡，5：允许所有卡
+   * `--ygo-card-rule=0` 设置房间默认只允许OCG
  * --ygo-duel-rule=
    * `--ygo-duel-rule=5` 设置默认使用大师规则2020
  * --ygo-lp=
@@ -45,18 +45,18 @@ docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD
    * 可以配合 http://(ip):7980/deck-dashboard.html
  * --cloud-replay=[true|false]
    * `--cloud-replay=true` 开启云录像，需要安装MySQL，配合下列参数使用
-     * `--mysql-host` 设置MySQL服务器地址
-     * `--mysql-port` 设置MySQL端口
-     * `--mysql-user` 设置MySQL用户名
-     * `--mysql-passwd` 设置MySQL密码
-     * `--mysql-db` 设置MySQL数据库
+     * `--mysql-host=127.0.0.1` MySQL服务器地址
+     * `--mysql-port=3306` MySQL端口
+     * `--mysql-user=root` MySQL用户名
+     * `--mysql-passwd=123456` MySQL密码
+     * `--mysql-db=ygopro` MySQL数据库
  * --windbot=[true|false]
    * `--windbot=true` 开启人机对战功能
    * 如果你使用[windbot容器](https://hub.docker.com/r/yunikon525/windbot)，请配合 `--windbot-ip=`与`--windbot-port=`使用
 
 **使用示例** 开启web简易控制台，不开启人机功能，房间LP为16000，启用竞赛模式
 ```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=YGOServer --restart=always yunikon525/ygoserver --ygo-web=true --windbot=false --ygo-lp=16000 --tournament=true
+docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver --ygo-web=true --windbot=false --ygo-lp=16000 --tournament=true
 ```
 
 ## 其他说明

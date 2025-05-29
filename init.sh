@@ -1,6 +1,6 @@
 #!/bin/sh
 SRVPRO_PATH=/ygoserver
-SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-bot-no.json
+SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-no.json
 
 install_mono() {
     if [ "$(cat /etc/apk/arch)" = "armv7" ]; then
@@ -8,7 +8,6 @@ install_mono() {
     else
         echo "开始安装 MONO"
         apk add --no-cache --repository https://mirrors.aliyun.com/alpine/edge/community mono
-        windbot_start
     fi
 }
 
@@ -43,15 +42,14 @@ for arg in "$@"; do
     case $arg in
         --install-mono|mono)
             install_mono
-            shift
             ;;
         --default)
-            SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-bot-no.json
+            SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-no.json
             ;;
         --ygo-web=*)
             key="${arg#*=}"
             if [ "$key" = "true" ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-web-bot-no.json
+                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-no.json
             fi
             set_config_admin ".users.root.enabled=$key"
             ;;
@@ -63,17 +61,17 @@ for arg in "$@"; do
             key="${arg#*=}"
             if [ "$key" = "true" ]; then
                 install_mono
-                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-bot-yes.json
+                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-yes.json
             fi
             if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-web-bot-yes.json
+                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-yes.json
             fi
             ;;
         --ygo-lflist=*)
             key="${arg#*=}"
             set_config ".hostinfo.lflist=$key"
             ;;
-        --ygo-rule=*)
+        --ygo-card-rule=*|--ygo-rule=*)
             key="${arg#*=}"
             set_config ".hostinfo.rule=$key"
             ;;
@@ -157,10 +155,10 @@ for arg in "$@"; do
             ;;
         --tournament=*)
             if [ "$key" = "true" ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-tournament.json
+                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-tournament.json
             fi
             if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/pm2-script/pm2-docker-web-tournament.json
+                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-tournament.json
             fi
             key="${arg#*=}"
             set_config ".modules.tournament_mode.enabled=$key"
