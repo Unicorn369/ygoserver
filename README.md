@@ -1,12 +1,12 @@
 # Docker-YGOServer
-在Docker容器中运行 [ygopro-server](https://github.com/mycard/srvpro)，支持x64、arm64与arm32架构
+在Docker容器中运行 [ygopro-server](https://github.com/purerosefallen/srvpro)，支持x64、arm64与arm32架构
 
 如有问题请在这反馈 --> [这里](https://github.com/Unicorn369/ygoserver/issues)
 
 ## 安装运行
 终端执行命令
 ```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver
+docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver:koishi
 ```
 
 ## 参数说明
@@ -38,6 +38,9 @@ docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD
    * `--tips-url="http://127.0.0.1:7980/data/tip.json"` 设置服务器提示消息url
  * --dialogues-url=
    * `--tips-url="http://127.0.0.1:7980/data/dialogues.json"` 设置服务器召唤词url
+ * --chat-color=[true|false]
+   * `--chat-color=true` 开启用户消息颜色
+   * 可配合 `--chat-color-vip=true` 仅限VIP用户使用
  * --random-duel=[true|false]
    * `--random-duel=true` 开启随机决斗
  * --tournament=[true|false]

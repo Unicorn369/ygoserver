@@ -111,6 +111,15 @@ for arg in "$@"; do
             key="${arg#*=}"
             set_config ".modules.dialogues.get_custom=\"$key\""
             ;;
+        --chat-color=*)
+            key="${arg#*=}"
+            set_config ".modules.chat_color.enabled=$key"
+            ;;
+        --chat-color-vip=*)
+            key="${arg#*=}"
+            set_config ".modules.chat_color.restrict_to_vip=$key"
+            set_config ".modules.vip.enabled=$key"
+            ;;
         --random-duel=*)
             key="${arg#*=}"
             set_config ".modules.random_duel.enabled=$key"
