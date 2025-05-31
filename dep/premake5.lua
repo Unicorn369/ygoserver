@@ -8,7 +8,7 @@ BUILD_FREETYPE = os.istarget("windows")
 BUILD_SQLITE = os.istarget("windows")
 BUILD_IRRLICHT = true
 
-USE_AUDIO = false
+USE_AUDIO = true
 AUDIO_LIB = "miniaudio"
 MINIAUDIO_SUPPORT_OPUS_VORBIS = true
 MINIAUDIO_BUILD_OPUS_VORBIS = os.istarget("windows")
@@ -18,7 +18,9 @@ IRRKLANG_PRO_BUILD_IKPMP3 = false
 SERVER_MODE = true
 SERVER_ZIP_SUPPORT = false
 SERVER_PRO2_SUPPORT = false
+SERVER_PRO3_SUPPORT = false
 SERVER_TAG_SURRENDER_CONFIRM = false
+USE_IRRKLANG = false
 
 -- read settings from command line or environment variables
 
@@ -82,11 +84,17 @@ newoption { trigger = "mac-arm", category = "YGOPro", description = "Cross compi
 newoption { trigger = "server-mode", category = "YGOPro - server", description = "" }
 newoption { trigger = "server-zip-support", category = "YGOPro - server", description = "" }
 newoption { trigger = "server-pro2-support", category = "YGOPro - server", description = "" }
+newoption { trigger = "server-pro3-support", category = "YGOPro - server", description = "" }
 newoption { trigger = "server-tag-surrender-confirm", category = "YGOPro - server", description = "" }
 
 boolOptions = {
+    "compat-mycard",
     "no-lua-safe",
-    "no-side-check"
+    "message-debug",
+    "no-side-check",
+    "enable-debug-func",
+    "log-lua-memory-size",
+    "log-in-chat",
 }
 
 for _, boolOption in ipairs(boolOptions) do
@@ -99,21 +107,15 @@ numberOptions = {
     "min-deck",
     "max-extra",
     "max-side",
+    "lua-memory-size",
 }
+
 for _, numberOption in ipairs(numberOptions) do
     newoption { trigger = numberOption, category = "YGOPro - options", description = "", value = "NUMBER" }
 end
 
 function GetParam(param)
     return _OPTIONS[param] or os.getenv(string.upper(string.gsub(param,"-","_")))
-end
-
-function FindHeaderWithSubDir(header, subdir)
-    local result = os.findheader(header)
-    if result and subdir then
-        result = path.join(result, subdir)
-    end
-    return result
 end
 
 function ApplyBoolean(param)
@@ -131,6 +133,14 @@ function ApplyNumber(param)
     end
 end
 
+function FindHeaderWithSubDir(header, subdir)
+    local result = os.findheader(header)
+    if result and subdir then
+        result = path.join(result, subdir)
+    end
+    return result
+end
+
 if GetParam("build-lua") then
     BUILD_LUA = true
 elseif GetParam("no-build-lua") then
@@ -146,9 +156,22 @@ end
 
 if GetParam("lua-deb") then
     BUILD_LUA = false
-    LUA_LIB_DIR = "/usr/lib/x86_64-linux-gnu"
-    LUA_LIB_NAME = "lua5.3-c++"
-    LUA_INCLUDE_DIR = "/usr/include/lua5.3"
+    local lua_versions = { "5.4", "5.3" }
+    local lua_version = nil
+    for _, version in ipairs(lua_versions) do
+        local lua_lib_dir = os.findlib("lua" .. version .. "-c++")
+        if lua_lib_dir then
+            print("Found lua " .. version .. " at " .. lua_lib_dir)
+            lua_version = version
+            LUA_LIB_DIR = lua_lib_dir
+            break
+        end
+    end
+    if not lua_version then
+        error("Lua library not found. Please install lua by command 'sudo apt -y install liblua5.4-dev'")
+    end
+    LUA_LIB_NAME = "lua" .. lua_version .. "-c++"
+    LUA_INCLUDE_DIR = path.join("/usr/include", "lua" .. lua_version)
 end
 
 if GetParam("build-event") then
@@ -191,6 +214,7 @@ if not BUILD_IRRLICHT then
     IRRLICHT_LIB_DIR = GetParam("irrlicht-lib-dir") or os.findlib("irrlicht")
 end
 
+USE_AUDIO = not SERVER_MODE and not GetParam("no-audio")
 if GetParam("no-audio") then
     USE_AUDIO = false
 elseif GetParam("no-use-miniaudio") then
@@ -265,8 +289,21 @@ end
 if GetParam("winxp-support") and os.istarget("windows") then
     WINXP_SUPPORT = true
 end
-if GetParam("mac-arm") and os.istarget("macosx") then
-    MAC_ARM = true
+
+IS_ARM=false
+
+function spawn(cmd)
+    local handle = io.popen(cmd)
+    if not handle then
+        return nil
+    end
+    local result = handle:read("*a")
+    handle:close()
+    if result and #result > 0 then
+        return result
+    else
+        return nil
+    end
 end
 if GetParam("server-mode") then
     SERVER_MODE = true
@@ -277,15 +314,80 @@ end
 if GetParam("server-pro2-support") then
     SERVER_PRO2_SUPPORT = true
     SERVER_ZIP_SUPPORT = true
+    SERVER_TAG_SURRENDER_CONFIRM = true
+end
+if GetParam("server-pro3-support") then
+    SERVER_PRO3_SUPPORT = true
+    SERVER_ZIP_SUPPORT = true
+    SERVER_TAG_SURRENDER_CONFIRM = true
 end
 if GetParam("server-tag-surrender-confirm") then
     SERVER_TAG_SURRENDER_CONFIRM = true
 end
 
+if SERVER_MODE then
+    BUILD_FREETYPE = false
+    BUILD_IKPMP3 = false
+    USE_IRRKLANG = false
+    IRRKLANG_PRO = false
+    if not SERVER_ZIP_SUPPORT then
+        BUILD_IRRLICHT = false
+    else
+        BUILD_IRRLICHT = true
+    end
+end
+
+function isRunningUnderRosetta()
+    local rosetta_result=spawn("sysctl -n sysctl.proc_translated 2>/dev/null")
+    return tonumber(rosetta_result) == 1
+end
+
+function IsRunningUnderARM()
+    -- os.hostarch() is over premake5 beta3,
+    if os.hostarch then
+        local host_arch = os.hostarch()
+        local possible_archs = { "ARM", "ARM64", "loongarch64", "armv5", "armv7", "aarch64" }
+        for _, arch in ipairs(possible_archs) do
+            if host_arch:lower():match(arch:lower()) then
+                return true
+            end
+        end
+    else
+        -- use command 'arch' to detect the architecture on macOS or Linux
+        local arch_result = spawn("arch 2>/dev/null")
+        if arch_result then
+            arch_result = arch_result:lower():gsub("%s+", "")
+            if arch_result == "arm64" or arch_result == "aarch64" then
+                return true
+            elseif arch_result == "arm" or arch_result == "armv7" or arch_result == "armv5" then
+                return true -- for ARMv5, ARMv7, etc.
+            elseif arch_result == "loongarch64" then
+                return true -- for loongarch64
+            end
+        end
+    end
+    return false
+end
+
+function isARM()
+    if IsRunningUnderARM() then
+        return true
+    end
+    if os.istarget("macosx") and isRunningUnderRosetta() then
+        -- macOS under rosetta will report x86_64, but it is running on ARM
+        print("Detected running under Rosetta on macOS, treating as ARM")
+        return true
+    end
+    return false
+end
+
+IS_ARM=isARM() or GetParam("mac-arm") -- detect if the current system is ARM
+MAC_ARM=os.istarget("macosx") and IS_ARM
+
 workspace "YGOPro"
     location "build"
     language "C++"
-    objdir "obj"
+    objdir "obj"    
 
     configurations { "Release", "Debug" }
 
@@ -298,7 +400,9 @@ workspace "YGOPro"
     end
 
     filter "system:windows"
+if not SERVER_PRO3_SUPPORT then
         entrypoint "mainCRTStartup"
+end
         systemversion "latest"
         startproject "YGOPro"
         if WINXP_SUPPORT then
@@ -306,6 +410,9 @@ workspace "YGOPro"
             toolset "v141_xp"
         else
             defines { "WINVER=0x0601" } -- WIN7
+        end
+        if SERVER_PRO3_SUPPORT then
+            architecture "x86_64"
         end
 
     filter "system:macosx"
@@ -341,9 +448,17 @@ end
     filter { "configurations:Release", "not action:vs*" }
         symbols "On"
         defines "NDEBUG"
-        --if not MAC_ARM then
+        --if not IS_ARM then
         --    buildoptions "-march=native"
         --end
+        if IS_ARM and not MAC_ARM then
+            buildoptions {
+                "-march=armv8-a",
+                "-mtune=cortex-a72",
+                "-Wno-psabi"
+            }
+            pic "On"
+        end
 
     filter { "configurations:Debug", "action:vs*" }
         disablewarnings { "6011", "6031", "6054", "6262" }
@@ -359,6 +474,11 @@ end
 
     filter "not action:vs*"
         buildoptions { "-fno-strict-aliasing", "-Wno-multichar", "-Wno-format-security" }
+
+if SERVER_PRO3_SUPPORT then
+    filter "not action:vs*"
+        pic "On"
+end
 
     filter {}
 

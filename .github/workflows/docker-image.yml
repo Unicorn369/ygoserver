@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "koishi" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "koishi" ]
 
 jobs:
   docker:
@@ -23,10 +23,10 @@ jobs:
       
       - name: Download Data
         run: |
-          wget -O ygopro.zip https://github.com/mycard/ygopro/archive/refs/heads/server.zip
-          wget -O ocgcore.zip https://github.com/mycard/ygopro-core/archive/refs/heads/master.zip
-          wget -O script.zip https://github.com/mycard/ygopro-scripts/archive/refs/heads/master.zip
-          wget -O srvpro.zip https://github.com/mycard/srvpro/archive/refs/heads/master.zip
+          wget -O ygopro.zip https://github.com/purerosefallen/ygopro/archive/refs/heads/server.zip
+          wget -O ocgcore.zip https://github.com/purerosefallen/ygopro-core/archive/refs/heads/master.zip
+          wget -O script.zip https://github.com/Smile-DK/ygopro-scripts/archive/refs/heads/master.zip
+          wget -O srvpro.zip https://github.com/purerosefallen/srvpro/archive/refs/heads/master.zip
           unzip -o -qq ygopro.zip
           unzip -o -qq ocgcore.zip
           unzip -o -qq script.zip
@@ -142,7 +142,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64, linux/arm64, linux/arm
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ygoserver:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ygoserver:koishi
           build-args: |
             SRVPRO_PATH=./srvpro
             YGOPRO_PATH=./ygopro-bin

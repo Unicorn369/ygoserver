@@ -109,7 +109,7 @@ for arg in "$@"; do
             ;;
         --dialogues-url=*)
             key="${arg#*=}"
-            set_config ".modules.dialogues.get=\"$key\""
+            set_config ".modules.dialogues.get_custom=\"$key\""
             ;;
         --random-duel=*)
             key="${arg#*=}"
