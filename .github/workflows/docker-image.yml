@@ -53,8 +53,12 @@ jobs:
       - name: Build Ygopro amd64
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
-          export CC=x86_64-linux-musl-cc
-          export CXX=x86_64-linux-musl-c++
+          export CHOST=x86_64-linux-musl
+          export AR=$CHOST-ar
+          export CC=$CHOST-cc
+          export CXX=$CHOST-c++
+          export LD=$CHOST-ld
+          export STRIP=$CHOST-strip
           cd ygopro/build/
           rm -rf ../bin/ ../obj/
           make config=release -j$(grep -c "processor" /proc/cpuinfo)
@@ -63,8 +67,12 @@ jobs:
       - name: Build Ygopro arm64
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
-          export CC=aarch64-linux-musl-cc
-          export CXX=aarch64-linux-musl-c++
+          export CHOST=aarch64-linux-musl
+          export AR=$CHOST-ar
+          export CC=$CHOST-cc
+          export CXX=$CHOST-c++
+          export LD=$CHOST-ld
+          export STRIP=$CHOST-strip
           cd ygopro/build/
           rm -rf ../bin/ ../obj/
           make config=release -j$(grep -c "processor" /proc/cpuinfo)
@@ -73,8 +81,12 @@ jobs:
       - name: Build Ygopro arm
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
-          export CC=arm-linux-musleabihf-cc
-          export CXX=arm-linux-musleabihf-c++
+          export CHOST=arm-linux-musleabihf
+          export AR=$CHOST-ar
+          export CC=$CHOST-cc
+          export CXX=$CHOST-c++
+          export LD=$CHOST-ld
+          export STRIP=$CHOST-strip
           cd ygopro/build/
           rm -rf ../bin/ ../obj/
           make config=release -j$(grep -c "processor" /proc/cpuinfo)
