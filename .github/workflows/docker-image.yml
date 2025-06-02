@@ -48,7 +48,7 @@ jobs:
           mv -f ocgcore ygopro/
           mv -f script ygopro/
           cd ygopro/
-          premake5 gmake --build-lua --build-event --build-sqlite
+          premake5 gmake --build-lua --build-event --build-sqlite --server-zip-support
       
       - name: Build Ygopro amd64
         run: |
