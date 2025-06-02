@@ -4,9 +4,13 @@
 如有问题请在这反馈 --> [这里](https://github.com/Unicorn369/ygoserver/issues)
 
 ## 安装运行
-终端执行命令
+安装原版
 ```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver
+docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver:latest
+```
+安装koishi版
+```
+docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver:koishi
 ```
 
 ## 参数说明
