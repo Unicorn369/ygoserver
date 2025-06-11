@@ -16,9 +16,8 @@ jobs:
       - name: Build WindBot
         run: |
           sudo apt install mono-devel -y
-          wget -O windbot.zip https://github.com/mycard/windbot/archive/refs/heads/master.zip
-          unzip -o -qq windbot.zip
-          cd windbot-master/
+          git clone --depth=1 https://github.com/mycard/windbot.git windbot-src
+          cd windbot-src/
           xbuild /property:Configuration=Release /property:TargetFrameworkVersion="v4.6"
           mv -f bin/Release ../windbot
           cd ../windbot
