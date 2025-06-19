@@ -40,8 +40,13 @@ fi
 
 for arg in "$@"; do
     case $arg in
+        --version)
+            echo "Docker 2025/06/11"
+            shift && exit
+            ;;
         --install-mono|mono)
             install_mono
+            shift && exit
             ;;
         --default)
             SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-no.json

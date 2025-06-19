@@ -13,6 +13,23 @@ docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD
 docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver:koishi
 ```
 
+## 带参数运行
+开启web简易控制台，密码设置为ygo2025，不开启人机功能，房间LP为4000，启用竞赛模式
+
+注：竞赛模式可配合“[竞赛模式卡组管理](http://srvpro.ygo233.com/deck-dashboard.html)”使用
+```
+docker run -d -p 7911:7911 -p 7922:7922 -p 7980:7980 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver:latest --ygo-web=true --ygo-web-passwd=ygo2025 --windbot=false --ygo-lp=4000 --tournament=true
+```
+
+安装windbot容器，安装koishi版server，开启人机功能，设定windbot容器IP为172.17.0.2，开启随机决斗
+
+注：不知道windbot容器IP可改用`--windbot-ip=$(docker exec -it windbot hostname -i)`
+```
+docker run -d --name windbot --restart=always yunikon525/windbot
+
+docker run -d -p 7911:7911 -p 7922:7922 -p 7980:7980 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver:koishi --windbot=true --windbot-ip=172.17.0.2 --random-duel=true
+```
+
 ## 参数说明
  * --ygo-web=[true|false]
    * `--ygo-web=true`开启简易控制台功能
@@ -20,7 +37,6 @@ docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD
    * 控制台：http://(ip):7980
  * --ygo-windbot=[true|false]
    * 是否启用本地人机对战(windbot)服务
-   * 需配合`--install-mono`安装mono
    * 如果你安装了[windbot容器](https://hub.docker.com/r/yunikon525/windbot)，则请勿使用此参数
  * --ygo-lflist=
    * `--ygo-lflist=0` 设置房间默认使用第1个禁卡表
@@ -57,11 +73,6 @@ docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD
  * --windbot=[true|false]
    * `--windbot=true` 开启人机对战功能
    * 如果你使用[windbot容器](https://hub.docker.com/r/yunikon525/windbot)，请配合 `--windbot-ip=`与`--windbot-port=`使用
-
-**使用示例** 开启web简易控制台，不开启人机功能，房间LP为16000，启用竞赛模式
-```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver --ygo-web=true --windbot=false --ygo-lp=16000 --tournament=true
-```
 
 ## 其他说明
   * 端口
