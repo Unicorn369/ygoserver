@@ -1,5 +1,3 @@
-include("premake5-event_pthreads.lua")
-
 project "event"
     kind "StaticLib"
 
@@ -16,6 +14,7 @@ project "event"
         "event.c",
         "evmap.c",
         "evthread.c",
+        "evthread_pthread.c",
         "evutil.c",
         "evutil_rand.c",
         "evutil_time.c",
