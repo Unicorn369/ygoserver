@@ -7,6 +7,16 @@
 docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/replays:/ygoserver/replays -v $PWD/sync:/ygoserver/sync -v $PWD/tmp:/ygoserver/tmp --name=edoserver --restart=always yunikon525/ygoserver:edo
 ```
 
+## 参数说明
+ * --url-scripts=https://github.com/ProjectIgnis/CardScripts
+   * 设置 scripts 源
+ * --url-databases=https://github.com/ProjectIgnis/BabelCDB
+   * 设置 databases 源
+ * --url-banlists=https://github.com/ProjectIgnis/LFLists
+   * 设置 banlists 源
+ * --url-bin=https://github.com/Unicorn369/edopro-core-bin
+   * 设置 bin 源
+
 ## 其他说明
   * 端口
     * `7911`: duelport

@@ -6,8 +6,20 @@ set_config() {
     mv -f "$SERVER_PATH/config/config.json.tmp" "$SERVER_PATH/config/config.json"
 }
 
+set_config_url() {
+    js_length=`cat "$SERVER_PATH/config/config.json" | jq .repos | jq 'length'`
+    for i in $(seq 0 $(expr $js_length - 1))
+    do
+        if [[ `cat config.json | jq .repos[$i].name` == "\"$1\"" ]] ; then
+            jq ".repos[$i].remote=\"$2\"" "$SERVER_PATH/config/config.json" > "$SERVER_PATH/config/config.json.tmp"
+            mv -f "$SERVER_PATH/config/config.json.tmp" "$SERVER_PATH/config/config.json"
+            break
+        fi
+    done
+}
+
 run_server() {
-  ./multirole
+  ./multirole > tmp/server.log
 }
 
 cd $SERVER_PATH
@@ -31,7 +43,7 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "Multirole 2025/06/24"
+            echo "Multirole 2025/07/07"
             shift && exit
             ;;
         --default)
@@ -44,6 +56,26 @@ for arg in "$@"; do
             wget -O /dev/null http://localhost:10002/up-banlists
             wget -O /dev/null http://localhost:10003/up-bin
             shift && exit
+            ;;
+        --url-scripts=*)
+            key="scripts"
+            url="${arg#*=}"
+            set_config_url $key $url
+            ;;
+        --url-databases=*)
+            key="databases"
+            url="${arg#*=}"
+            set_config_url $key $url
+            ;;
+        --url-banlists=*)
+            key="banlists"
+            url="${arg#*=}"
+            set_config_url $key $url
+            ;;
+        --url-bin=*)
+            key="bin"
+            url="${arg#*=}"
+            set_config_url $key $url
             ;;
         -*|--*)
             echo "Illegal option $1"
