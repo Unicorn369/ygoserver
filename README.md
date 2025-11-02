@@ -14,7 +14,7 @@ docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD
    * 设置 databases 源
  * --url-banlists=https://github.com/ProjectIgnis/LFLists
    * 设置 banlists 源
- * --url-bin=https://github.com/Unicorn369/edopro-core-bin
+ * --url-bin=https://github.com/ProjectIgnis/bin
    * 设置 bin 源
 
 ## 其他说明
@@ -23,7 +23,7 @@ docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD
     * `7922`: roomlistport
 
   * 数据卷
-    * `/ygoserver/config`: 配置文件数据卷
-    * `/ygoserver/replays`: 录像文件数据卷
-    * `/ygoserver/sync`: Server数据卷
-    * `/ygoserver/tmp`: tmp数据卷
+    * `$PWD/config`: 配置文件数据卷
+    * `$PWD/replays`: 录像文件数据卷
+    * `$PWD/sync`: Server数据卷
+    * `$PWD/tmp`: tmp数据卷

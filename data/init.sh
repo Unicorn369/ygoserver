@@ -1,5 +1,5 @@
 #!/bin/sh
-SERVER_PATH=/ygoserver
+SERVER_PATH=/edoserver
 
 set_config() {
     jq $1 "$SERVER_PATH/config/config.json" > "$SERVER_PATH/config/config.json.tmp"
@@ -10,7 +10,7 @@ set_config_url() {
     js_length=`cat "$SERVER_PATH/config/config.json" | jq .repos | jq 'length'`
     for i in $(seq 0 $(expr $js_length - 1))
     do
-        if [[ `cat config.json | jq .repos[$i].name` == "\"$1\"" ]] ; then
+        if [[ `cat "$SERVER_PATH/config/config.json" | jq .repos[$i].name` == "\"$1\"" ]] ; then
             jq ".repos[$i].remote=\"$2\"" "$SERVER_PATH/config/config.json" > "$SERVER_PATH/config/config.json.tmp"
             mv -f "$SERVER_PATH/config/config.json.tmp" "$SERVER_PATH/config/config.json"
             break
@@ -34,6 +34,7 @@ fi
 # 
 if [ "$(cat /etc/apk/arch)" = "armv7" ]; then
     set_config ".coreProvider.fileRegex=\".*libocgcore\\\\.arm.so\""
+    set_config_url "bin" "https://github.com/Unicorn369/edopro-core-bin"
 elif [ "$(cat /etc/apk/arch)" = "aarch64" ]; then
     set_config ".coreProvider.fileRegex=\".*libocgcore\\\\.aarch64.so\""
 else
@@ -43,7 +44,7 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "Multirole 2025/07/07"
+            echo "Multirole 2025/11/02"
             shift && exit
             ;;
         --default)

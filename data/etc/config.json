@@ -27,7 +27,7 @@
     },
     {
       "name": "bin",
-      "remote": "https://github.com/Unicorn369/edopro-core-bin",
+      "remote": "https://github.com/ProjectIgnis/bin",
       "path": "./sync/bin/",
       "webhookPort": 10003,
       "webhookToken": "up-bin"

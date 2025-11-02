@@ -4,17 +4,17 @@ ARG TARGETARCH
 ARG DATA_PATH
 ARG SERVER_PATH
 
-COPY ${DATA_PATH} /ygoserver
-COPY ${SERVER_PATH}/hornet-${TARGETARCH} /ygoserver/hornet
-COPY ${SERVER_PATH}/multirole-${TARGETARCH} /ygoserver/multirole
+COPY ${DATA_PATH} /edoserver
+COPY ${SERVER_PATH}/hornet-${TARGETARCH} /edoserver/hornet
+COPY ${SERVER_PATH}/multirole-${TARGETARCH} /edoserver/multirole
 
-WORKDIR /ygoserver
+WORKDIR /edoserver
 
-RUN chmod +x /ygoserver/hornet
-RUN chmod +x /ygoserver/multirole
-RUN chmod +x /ygoserver/init.sh
+RUN chmod +x /edoserver/hornet
+RUN chmod +x /edoserver/multirole
+RUN chmod +x /edoserver/init.sh
 
 RUN apk add --no-cache jq
 
-ENTRYPOINT [ "/ygoserver/init.sh" ]
+ENTRYPOINT [ "/edoserver/init.sh" ]
 CMD [ "--default" ]
