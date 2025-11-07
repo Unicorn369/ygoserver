@@ -8,11 +8,11 @@
 ## 安装运行
 安装原版
 ```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver:latest
+docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions -v $PWD/logs:/root/.pm2/logs --name=ygoserver --restart=always yunikon525/ygoserver:latest
 ```
 安装koishi版
 ```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions --name=ygoserver --restart=always yunikon525/ygoserver:koishi
+docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/expansions:/ygoserver/ygopro/expansions -v $PWD/logs:/root/.pm2/logs --name=ygoserver --restart=always yunikon525/ygoserver:koishi
 ```
 
 ## 带参数运行
@@ -84,7 +84,8 @@ docker run -d -p 7911:7911 -p 7922:7922 -p 7980:7980 -v $PWD/config:/ygoserver/c
     * `7980`: web端口
 
   * 数据卷
-    * `/ygoserver/config`: YGOServer配置文件数据卷
-    * `/ygoserver/ygopro/expansions`: YGOPro额外卡片数据卷
-    * `/ygoserver/decks`: 竞赛模式卡组数据卷
-    * `/ygoserver/replays`: 竞赛模式录像数据卷
+    * `$PWD/config`: YGOServer配置文件数据卷
+    * `$PWD/expansions`: YGOPro额外卡片数据卷
+    * `$PWD/decks`: 竞赛模式卡组数据卷
+    * `$PWD/replays`: 竞赛模式录像数据卷
+    * `$PWD/logs`: 运行日志

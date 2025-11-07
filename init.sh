@@ -41,7 +41,7 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "YGOServer Build 2025/09/30"
+            echo "YGOServer Build 2025/11/07"
             shift && exit
             ;;
         --install-mono|mono)
@@ -67,9 +67,9 @@ for arg in "$@"; do
             if [ "$key" = "true" ]; then
                 install_mono
                 SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-yes.json
-            fi
-            if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-yes.json
+                if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
+                    SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-yes.json
+                fi
             fi
             ;;
         --ygo-lflist=*)
@@ -161,9 +161,9 @@ for arg in "$@"; do
         --tournament=*)
             if [ "$key" = "true" ]; then
                 SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-tournament.json
-            fi
-            if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-tournament.json
+                if [ "$key" = "true" && "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
+                    SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-tournament.json
+                fi
             fi
             key="${arg#*=}"
             set_config ".modules.tournament_mode.enabled=$key"

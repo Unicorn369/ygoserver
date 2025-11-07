@@ -34,6 +34,7 @@ jobs:
           mkdir -p ygopro
           mkdir -p ygopro-bin
           mv -f ygopro-server/gframe ygopro/
+          mv -f ygopro-server/cards.cdb ygopro/
           mv -f ygopro-server/lflist.conf ygopro/
           mv -f ygopro-server/strings.conf ygopro/
           mv -f ygopro-core-master ocgcore
@@ -114,8 +115,7 @@ jobs:
           mv -f windbot srvpro/ && mv -f ygopro srvpro/
           cd srvpro/ygopro/
           rm -rf bin obj build event lua sqlite3 ocgcore
-          wget -O cards.cdb https://github.com/mycard/ygopro-database/raw/refs/heads/master/locales/zh-CN/cards.cdb
-          ls gframe | sed '/game.cpp/d' | xargs -I {} rm -rf gframe/{}
+          ls gframe | sed '/config.h/d' | xargs -I {} rm -rf gframe/{}
       
       #
       #- name: Test Data
