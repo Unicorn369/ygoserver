@@ -66,12 +66,20 @@ docker run -d -p 7911:7911 -p 7922:7922 -p 7980:7980 -v $PWD/config:/ygoserver/c
    * `--tournament=true` 开启竞赛模式
    * 可以配合 http://(ip):7980/deck-dashboard.html
  * --cloud-replay=[true|false]
-   * `--cloud-replay=true` 开启云录像，需要安装MySQL，配合下列参数使用
+   * `--cloud-replay=true` 开启云录像，需要安装MySQL，并配合下列参数使用
      * `--mysql-host=127.0.0.1` MySQL服务器地址
      * `--mysql-port=3306` MySQL端口
      * `--mysql-user=root` MySQL用户名
      * `--mysql-passwd=123456` MySQL密码
      * `--mysql-db=ygopro` MySQL数据库
+ * --arena=[true|false]
+   * `--arena=true` 开启arena模式，需要安装[ygopro-arena-api](https://hub.docker.com/r/yunikon525/ygopro-arena-api)，并配合下列参数使用
+     * `--arena-key="ygopro-arena"` 设置认证密钥
+     * `--arena-post="http://127.0.0.1：444/api/score"` 设置post接口
+     * `--arena-get="http://127.0.0.1：444/api/user?username="` 设置get接口
+ * `--arena-mode=` 设置arena模式
+   * all：ALL，athletic：娱乐，entertain：竞技
+   * `--arena-mode=entertain` 设置为竞技模式
  * --windbot=[true|false]
    * `--windbot=true` 开启人机对战功能
    * 如果你使用[windbot容器](https://hub.docker.com/r/yunikon525/windbot)，请配合 `--windbot-ip=`与`--windbot-port=`使用

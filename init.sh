@@ -41,7 +41,7 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "YGOServer Build 2025/12/08"
+            echo "YGOServer Build 2025/12/09"
             shift && exit
             ;;
         --install-mono|mono)
@@ -167,6 +167,32 @@ for arg in "$@"; do
             fi
             key="${arg#*=}"
             set_config ".modules.tournament_mode.enabled=$key"
+            ;;
+        --arena=*)
+            if [ "$key" = "true" ]; then
+                patch -N -d $SRVPRO_PATH < $SRVPRO_PATH/data-start/arena-fix.patch
+            fi
+            if [ "$key" = "false" ]; then
+                patch -R -N -d $SRVPRO_PATH < $SRVPRO_PATH/data-start/arena-fix.patch
+            fi
+            key="${arg#*=}"
+            set_config ".modules.arena_mode.enabled=$key"
+            ;;
+        --arena-mode=*)
+            key="${arg#*=}"
+            set_config ".modules.arena_mode.mode=\"$key\""
+            ;;
+        --arena-key=*)
+            key="${arg#*=}"
+            set_config ".modules.arena_mode.accesskey=\"$key\""
+            ;;
+        --arena-post=*)
+            key="${arg#*=}"
+            set_config ".modules.arena_mode.post_score=\"$key\""
+            ;;
+        --arena-get=*)
+            key="${arg#*=}"
+            set_config ".modules.arena_mode.get_score=\"$key\""
             ;;
         --default-script=*)
             key="${arg#*=}"
