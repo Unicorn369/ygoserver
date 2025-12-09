@@ -14,7 +14,7 @@ ARG SRVPRO_PATH
 ARG YGOPRO_PATH
 ARG INIT_FILE_PATH
 
-RUN apk add --no-cache jq
+RUN apk add --no-cache jq patch
 
 COPY --from=builder /ygoserver /ygoserver
 COPY --from=builder /opt/local /usr/

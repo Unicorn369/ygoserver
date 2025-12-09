@@ -159,23 +159,23 @@ for arg in "$@"; do
             set_config ".modules.windbot.my_ip=\"$(hostname -i)\""
             ;;
         --tournament=*)
+            key="${arg#*=}"
             if [ "$key" = "true" ]; then
                 SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-tournament.json
                 if [ "$key" = "true" && "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
                     SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-tournament.json
                 fi
             fi
-            key="${arg#*=}"
             set_config ".modules.tournament_mode.enabled=$key"
             ;;
         --arena=*)
+            key="${arg#*=}"
             if [ "$key" = "true" ]; then
                 patch -N -d $SRVPRO_PATH < $SRVPRO_PATH/data-start/arena-fix.patch
             fi
             if [ "$key" = "false" ]; then
                 patch -R -N -d $SRVPRO_PATH < $SRVPRO_PATH/data-start/arena-fix.patch
             fi
-            key="${arg#*=}"
             set_config ".modules.arena_mode.enabled=$key"
             ;;
         --arena-mode=*)

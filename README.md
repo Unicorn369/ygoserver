@@ -57,9 +57,9 @@ docker run -d -p 7911:7911 -p 7922:7922 -p 7980:7980 -v $PWD/config:/ygoserver/c
  * --welcome=
    * `--welcome="欢迎来到我的服务器"` 设置服务器欢迎信息
  * --tips-url=
-   * `--tips-url="http://127.0.0.1:7980/data/tip.json"` 设置服务器提示消息url
+   * `--tips-url=http://127.0.0.1:7980/data/tip.json` 设置服务器提示消息url
  * --dialogues-url=
-   * `--tips-url="http://127.0.0.1:7980/data/dialogues.json"` 设置服务器召唤词url
+   * `--tips-url=http://127.0.0.1:7980/data/dialogues.json` 设置服务器召唤词url
  * --random-duel=[true|false]
    * `--random-duel=true` 开启随机决斗
  * --tournament=[true|false]
@@ -74,12 +74,12 @@ docker run -d -p 7911:7911 -p 7922:7922 -p 7980:7980 -v $PWD/config:/ygoserver/c
      * `--mysql-db=ygopro` MySQL数据库
  * --arena=[true|false]
    * `--arena=true` 开启arena模式，需要安装[ygopro-arena-api](https://hub.docker.com/r/yunikon525/ygopro-arena-api)，并配合下列参数使用
-     * `--arena-key="ygopro-arena"` 设置认证密钥
-     * `--arena-post="http://127.0.0.1：444/api/score"` 设置post接口
-     * `--arena-get="http://127.0.0.1：444/api/user?username="` 设置get接口
- * `--arena-mode=` 设置arena模式
-   * all：ALL，athletic：娱乐，entertain：竞技
-   * `--arena-mode=entertain` 设置为竞技模式
+     * `--arena-key=ygopro-arena` 设置认证密钥
+     * `--arena-post=http://127.0.0.1:444/api/score` 设置post接口
+     * `--arena-get=http://127.0.0.1:444/api/user?username=` 设置get接口
+     * `--arena-mode=[athletic|entertain]` 设置arena模式
+       * all：ALL，athletic：竞技，entertain：娱乐
+       * `--arena-mode=athletic` 设置为竞技模式
  * --windbot=[true|false]
    * `--windbot=true` 开启人机对战功能
    * 如果你使用[windbot容器](https://hub.docker.com/r/yunikon525/windbot)，请配合 `--windbot-ip=`与`--windbot-port=`使用
