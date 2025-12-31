@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>SRVPro Replay Dashboard</title>
-<link rel="stylesheet" href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-y/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-<link href="/static/style.css" rel="stylesheet">
+<link href="static/bootstrap.min.css" rel="stylesheet">
+<link href="static/style.css" rel="stylesheet">
 </head>
 <body>
 <header class="container">
@@ -73,24 +73,25 @@
     </div>
 </div>
 
-<script src="/static/jquery.js"></script>
-<script src="/static/bootstrap.js"></script>
+<script src="static/jquery.js"></script>
+<script src="static/bootstrap.js"></script>
 <script>
 $(function(){
+    let domain = document.domain;
     $("body").tooltip({selector: "[data-toggle='tooltip']", trigger: "hover"});
     $("#open_button").click(loadreplays);
     $("#empty_button").click(clearreplays);
     $("#pack_button").click(packreplays);
     //$("#welcome_button").click(welcome);
     var params=parseQueryString();
-    $("#ip").val("127.0.0.1");
+    $("#ip").val(domain);
     $("#port").val("7933");
-	$("#username").val("root");
+    $("#username").val("root");
     $("#password").val("123456");
     $("#roomname").val(params["roomname"]);
     $("#duelcount").val(params["duelcount"]);
     $("#playername").val(params["playername"]);
-	$("#score").val(params["score"]);
+    $("#score").val(params["score"]);
 });
 
 function parseQueryString() {
@@ -175,5 +176,6 @@ function listreplay(data) {
 }
 
 </script>
+
 </body>
 </html>

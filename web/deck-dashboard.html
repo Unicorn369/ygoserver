@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>SRVPro Deck Dashboard</title>
-<link rel="stylesheet" href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-y/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-<link href="/static/style.css" rel="stylesheet">
+<link href="static/bootstrap.min.css" rel="stylesheet">
+<link href="static/style.css" rel="stylesheet">
 </head>
 <body class="deck">
 <header class="container">
@@ -80,24 +80,22 @@
     </div>
 </div>
 
-<script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-y/jquery/2.2.4/jquery.min.js" integrity="sha384-rY/jv8mMhqDabXSo+UCggqKtdmBfd3qC2/KvyTDNQ6PcUJXaxK1tMepoQda4g5vB" crossorigin="anonymous"></script>
-<script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-y/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+<script src="static/jquery.js"></script>
+<script src="static/bootstrap.js"></script>
 <script>
 var ip, port, password;
 var apis={}
 
 $(function(){
+    let domain = document.domain;
     $("body").tooltip({selector: "[data-toggle='tooltip']"});
-    
     $("#login_button").click(login);
     $("#clear_button").click(clear);
-    
     $(".buttons button").click(function(){openapi($(this).attr("action"),null,$(this).attr("confirm"))});
-    
     var params=parseQueryString();
-    $("#ip").val("127.0.0.1");
+    $("#ip").val(domain);
     $("#port").val("7933");
-	$("#username").val("root");
+    $("#username").val("root");
     $("#password").val("123456");
     $("#filesel").change(function() { 
         upload_decks();
@@ -284,5 +282,6 @@ function upload_decks() {
     });
 }
 </script>
+
 </body>
 </html>
