@@ -37,6 +37,7 @@ jobs:
           mv -f ygopro-server/cards.cdb ygopro/
           mv -f ygopro-server/lflist.conf ygopro/
           mv -f ygopro-server/strings.conf ygopro/
+          mv -f ygopro-server/premake5.lua ygopro/
           mv -f ygopro-core-master ocgcore
           mv -f ygopro-scripts-master script
           mv -f srvpro-master srvpro
@@ -49,6 +50,7 @@ jobs:
           mv -f ocgcore ygopro/
           mv -f script ygopro/
           cd ygopro/
+          sed -i 's/^[[:space:]]*architecture[[:space:]]*"x86_64"/-- &/' premake5.lua
           premake5 gmake --build-lua --build-event --build-sqlite --server-zip-support
       
       - name: Build Ygopro amd64

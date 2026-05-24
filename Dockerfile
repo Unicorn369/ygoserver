@@ -27,4 +27,4 @@ RUN chmod +x /run.sh
 WORKDIR /ygoserver
 
 ENTRYPOINT [ "/run.sh" ]
-CMD [ "--default" ]
+#CMD [ "--ygo-windbot=1" ]
