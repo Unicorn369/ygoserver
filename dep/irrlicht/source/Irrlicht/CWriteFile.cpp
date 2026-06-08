@@ -3,7 +3,6 @@
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
 #include "CWriteFile.h"
-#include <stdio.h>
 
 namespace irr
 {
@@ -41,12 +40,12 @@ inline bool CWriteFile::isOpen() const
 
 
 //! returns how much was read
-s32 CWriteFile::write(const void* buffer, u32 sizeToWrite)
+size_t CWriteFile::write(const void* buffer, size_t sizeToWrite)
 {
 	if (!isOpen())
 		return 0;
 
-	return (s32)fwrite(buffer, 1, sizeToWrite, File);
+	return fwrite(buffer, 1, sizeToWrite, File);
 }
 
 
@@ -105,9 +104,16 @@ const io::path& CWriteFile::getFileName() const
 	return Filename;
 }
 
+//! Flush the content of the buffer in the file
+bool CWriteFile::flush()
+{
+	if (!isOpen())
+		return false;
 
+	return fflush(File) == 0; // 0 indicates success, otherwise EOF and errno is set
+}
 
-IWriteFile* createWriteFile(const io::path& fileName, bool append)
+IWriteFile* CWriteFile::createWriteFile(const io::path& fileName, bool append)
 {
 	CWriteFile* file = new CWriteFile(fileName, append);
 	if (file->isOpen())

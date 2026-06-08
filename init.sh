@@ -2,6 +2,32 @@
 SRVPRO_PATH=/ygoserver
 SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-no.json
 
+ENABLE_API="${ENABLE_API:-}"
+API_PASS="${API_PASS:-}"
+
+DB_HOST="${DB_HOST:-}"
+DB_PORT="${DB_PORT:-}"
+DB_USER="${DB_USER:-}"
+DB_PASS="${DB_PASS:-}"
+DB_NAME="${DB_NAME:-}"
+
+ENABLE_CLOUD_REPLAY="${ENABLE_CLOUD_REPLAY:-}"
+
+ENABLE_WINDBOT_BUILT="${ENABLE_WINDBOT_BUILT:-}"
+ENABLE_WINDBOT="${ENABLE_WINDBOT:-}"
+WINDBOT_PORT="${WINDBOT_PORT:-}"
+WINDBOT_MY_IP="${WINDBOT_MY_IP:-}"
+WINDBOT_SERVER_IP="${WINDBOT_SERVER_IP:-}"
+
+TOURNAMENT_MODE="${TOURNAMENT_MODE:-}"
+
+ENABLE_ARENA_MODE="${ENABLE_ARENA_MODE:-}"
+MYCARD_ARENA_MODE="${MYCARD_ARENA_MODE:-}"
+MYCARD_ARENA_ACCESS_KEY="${MYCARD_ARENA_ACCESS_KEY:-}"
+#MYCARD_ARENA_CHECK_PERMIT="${MYCARD_ARENA_CHECK_PERMIT:-}"
+MYCARD_ARENA_POST_SCORE="${MYCARD_ARENA_POST_SCORE:-}"
+MYCARD_ARENA_GET_SCORE="${MYCARD_ARENA_GET_SCORE:-}"
+
 install_mono() {
     if [ "$(cat /etc/apk/arch)" = "armv7" ]; then
         echo "arm: Not Supported"
@@ -19,6 +45,13 @@ set_config() {
 set_config_admin() {
     jq $1 "$SRVPRO_PATH/config/admin_user.json" > "$SRVPRO_PATH/config/admin_user.json.tmp"
     mv -f "$SRVPRO_PATH/config/admin_user.json.tmp" "$SRVPRO_PATH/config/admin_user.json"
+}
+
+is_enabled() {
+    case "$1" in
+        1|[Tt][Rr][Uu][Ee]) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 
 run_server() {
@@ -41,145 +74,24 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "KoishiServer Build 2025/06/30"
+            echo "YGOServer Build 2026/05/24"
             shift && exit
             ;;
         --install-mono|mono)
             install_mono
             shift && exit
             ;;
-        --default)
-            SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-no.json
-            ;;
-        --ygo-web=*)
-            key="${arg#*=}"
-            if [ "$key" = "true" ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-no.json
-            fi
-            set_config_admin ".users.root.enabled=$key"
-            ;;
-        --ygo-web-passwd=*)
-            key="${arg#*=}"
-            set_config_admin ".users.root.password=\"$key\""
-            ;;
-        --ygo-windbot=*)
-            key="${arg#*=}"
-            if [ "$key" = "true" ]; then
-                install_mono
-                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-yes.json
-            fi
-            if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-yes.json
-            fi
-            ;;
-        --ygo-lflist=*)
-            key="${arg#*=}"
-            set_config ".hostinfo.lflist=$key"
-            ;;
-        --ygo-card-rule=*|--ygo-rule=*)
-            key="${arg#*=}"
-            set_config ".hostinfo.rule=$key"
-            ;;
-        --ygo-mode=*)
-            key="${arg#*=}"
-            set_config ".hostinfo.mode=$key"
-            ;;
-        --ygo-duel-rule=*)
-            key="${arg#*=}"
-            set_config ".hostinfo.duel_rule=$key"
-            ;;
-        --ygo-lp=*)
-            key="${arg#*=}"
-            set_config ".hostinfo.start_lp=$key"
-            ;;
-        --ygo-start-hand=*)
-            key="${arg#*=}"
-            set_config ".hostinfo.start_hand=$key"
-            ;;
-        --ygo-draw-count=*)
-            key="${arg#*=}"
-            set_config ".hostinfo.draw_count=$key"
-            ;;
-        --ygo-time=*)
-            key="${arg#*=}"
-            set_config ".hostinfo.time_limit=$key"
-            ;;
-        --welcome=*)
-            key="${arg#*=}"
-            set_config ".modules.welcome=\"$key\""
-            ;;
-        --tips-url=*)
-            key="${arg#*=}"
-            set_config ".modules.tips.get=\"$key\""
-            ;;
-        --dialogues-url=*)
-            key="${arg#*=}"
-            set_config ".modules.dialogues.get_custom=\"$key\""
-            ;;
-        --chat-color=*)
-            key="${arg#*=}"
-            set_config ".modules.chat_color.enabled=$key"
-            ;;
-        --chat-color-vip=*)
-            key="${arg#*=}"
-            set_config ".modules.chat_color.restrict_to_vip=$key"
-            set_config ".modules.vip.enabled=$key"
-            ;;
-        --random-duel=*)
-            key="${arg#*=}"
-            set_config ".modules.random_duel.enabled=$key"
-            ;;
-        --cloud-replay=*)
-            key="${arg#*=}"
-            set_config ".modules.mysql.enabled=$key"
-            set_config ".modules.cloud_replay.enabled=$key"
-            ;;
-        --mysql-host=*)
-            key="${arg#*=}"
-            set_config ".modules.mysql.db.host=\"$key\""
-            ;;
-        --mysql-port=*)
-            key="${arg#*=}"
-            set_config ".modules.mysql.db.port=$key"
-            ;;
-        --mysql-user=*)
-            key="${arg#*=}"
-            set_config ".modules.mysql.db.username=\"$key\""
-            ;;
-        --mysql-passwd=*)
-            key="${arg#*=}"
-            set_config ".modules.mysql.db.password=\"$key\""
-            ;;
-        --mysql-db=*)
-            key="${arg#*=}"
-            set_config ".modules.mysql.db.database=\"$key\""
-            ;;
-        --windbot=*)
-            key="${arg#*=}"
-            set_config ".modules.windbot.enabled=$key"
-            ;;
-        --windbot-port=*)
-            key="${arg#*=}"
-            set_config ".modules.windbot.port=$key"
-            ;;
-        --windbot-ip=*)
-            key="${arg#*=}"
-            set_config ".modules.windbot.server_ip=\"$key\""
-            set_config ".modules.windbot.my_ip=\"$(hostname -i)\""
-            ;;
-        --tournament=*)
-            if [ "$key" = "true" ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-tournament.json
-            fi
-            if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
-                SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-tournament.json
-            fi
-            key="${arg#*=}"
-            set_config ".modules.tournament_mode.enabled=$key"
-            ;;
         --default-script=*)
             key="${arg#*=}"
             SRVPRO_SCRIPT=$key
+            ;;
+        --install-package=*)
+            key="${arg#*=}"
+            npm install $key
+            ;;
+        --ygo-windbot=*)
+            key="${arg#*=}"
+            ENABLE_WINDBOT_BUILT=$key
             ;;
         -*|--*)
             echo "Illegal option $1"
@@ -187,5 +99,109 @@ for arg in "$@"; do
     esac
     shift
 done
-
+#—————————— DB ——————————
+if [ -n "$DB_HOST" ]; then
+    set_config ".modules.mysql.db.host=\"$DB_HOST\""
+fi
+if [ -n "$DB_PORT" ]; then
+    set_config ".modules.mysql.db.port=$DB_PORT"
+fi
+if [ -n "$DB_USER" ]; then
+    set_config ".modules.mysql.db.username=\"$DB_USER\""
+fi
+if [ -n "$DB_PASS" ]; then
+    set_config ".modules.mysql.db.password=\"$DB_PASS\""
+fi
+if [ -n "$DB_NAME" ]; then
+    set_config ".modules.mysql.db.database=\"$DB_NAME\""
+fi
+#—————————— API ——————————
+if [ -n "$ENABLE_API" ]; then
+    if is_enabled "${ENABLE_API}"; then
+        SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-no.json
+        set_config_admin ".users.root.enabled=true"
+    else
+        set_config_admin ".users.root.enabled=false"
+    fi
+fi
+if [ -n "$API_PASS" ]; then
+    set_config_admin ".users.root.password=\"$API_PASS\""
+fi
+#—————————— CLOUD_REPLAY ——————————
+if [ -n "$ENABLE_CLOUD_REPLAY" ]; then
+    if is_enabled "${ENABLE_CLOUD_REPLAY}"; then
+        set_config ".modules.mysql.enabled=true"
+        set_config ".modules.cloud_replay.enabled=true"
+    else
+        set_config ".modules.mysql.enabled=false"
+        set_config ".modules.cloud_replay.enabled=false"
+    fi
+fi
+#—————————— WINDBOT ——————————
+if [ -n "$ENABLE_WINDBOT_BUILT" ]; then
+    if is_enabled "${ENABLE_WINDBOT_BUILT}"; then
+        install_mono
+        SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-yes.json
+        if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
+            SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-yes.json
+        fi
+        set_config ".modules.windbot.server_ip=\"127.0.0.1\""
+        set_config ".modules.windbot.my_ip=\"127.0.0.1\""
+    fi
+fi
+if [ -n "$ENABLE_WINDBOT" ]; then
+    if is_enabled "${ENABLE_WINDBOT}"; then
+        set_config ".modules.windbot.enabled=true"
+    else
+        set_config ".modules.windbot.enabled=false"
+    fi
+fi
+if [ -n "$WINDBOT_PORT" ]; then
+    set_config ".modules.windbot.port=$WINDBOT_PORT"
+fi
+if [ -n "$WINDBOT_MY_IP" ]; then
+    set_config ".modules.windbot.my_ip=\"$WINDBOT_MY_IP\""
+fi
+if [ -n "$WINDBOT_SERVER_IP" ]; then
+    set_config ".modules.windbot.server_ip=\"$WINDBOT_SERVER_IP\""
+fi
+#—————————— TOURNAMENT_MODE ——————————
+if [ -n "$TOURNAMENT_MODE" ]; then
+    if is_enabled "${TOURNAMENT_MODE}"; then
+        SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-tournament.json
+        if [ "$key" = "true" && "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
+            SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-tournament.json
+        fi
+        set_config ".modules.tournament_mode.enabled=true"
+    else
+        set_config ".modules.tournament_mode.enabled=false"
+    fi
+fi
+#—————————— ARENA_MODE ——————————
+if [ -n "$ENABLE_ARENA_MODE" ]; then
+    if is_enabled "${ENABLE_ARENA_MODE}"; then
+        patch -N -d $SRVPRO_PATH < $SRVPRO_PATH/data-start/arena-fix.patch
+        set_config ".modules.arena_mode.enabled=true"
+    else
+        patch -R -N -d $SRVPRO_PATH < $SRVPRO_PATH/data-start/arena-fix.patch
+        set_config ".modules.arena_mode.enabled=false"
+    fi
+fi
+if [ -n "$MYCARD_ARENA_MODE" ]; then
+    set_config ".modules.arena_mode.mode=\"$MYCARD_ARENA_MODE\""
+fi
+if [ -n "$MYCARD_ARENA_ACCESS_KEY" ]; then
+    set_config ".modules.arena_mode.accesskey=\"$MYCARD_ARENA_ACCESS_KEY\""
+fi
+#if [ -n "$MYCARD_ARENA_CHECK_PERMIT" ]; then
+#    set_config ".modules.arena_mode.check_permit=\"$MYCARD_ARENA_CHECK_PERMIT\""
+#fi
+if [ -n "$MYCARD_ARENA_POST_SCORE" ]; then
+    set_config ".modules.arena_mode.post_score=\"$MYCARD_ARENA_POST_SCORE\""
+fi
+if [ -n "$MYCARD_ARENA_GET_SCORE" ]; then
+    set_config ".modules.arena_mode.get_score=\"$MYCARD_ARENA_GET_SCORE\""
+fi
+#—————————— RUN ——————————
 run_server
+#—————————— END ——————————

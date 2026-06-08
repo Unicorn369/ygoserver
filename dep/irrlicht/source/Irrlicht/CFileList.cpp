@@ -3,11 +3,10 @@
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
 #include "CFileList.h"
-#include "IrrCompileConfig.h"
 #include "irrArray.h"
 #include "coreutil.h"
 
-#include "os.h"
+#include "os.h"	// debug logging
 
 namespace irr
 {
@@ -98,7 +97,7 @@ u32 CFileList::addItem(const io::path& fullPath, u32 offset, u32 size, bool isDi
 //! Returns the ID of a file in the file list, based on an index.
 u32 CFileList::getID(u32 index) const
 {
-	return index < Files.size() ? Files[index].ID : 0;	
+	return index < Files.size() ? Files[index].ID : 0;
 }
 
 bool CFileList::isDirectory(u32 index) const
@@ -107,7 +106,6 @@ bool CFileList::isDirectory(u32 index) const
 	if (index < Files.size())
 		ret = Files[index].IsDirectory;
 
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
 	return ret;
 }
 
@@ -117,7 +115,6 @@ u32 CFileList::getFileSize(u32 index) const
 	return index < Files.size() ? Files[index].Size : 0;
 }
 
-//! Returns the size of a file
 u32 CFileList::getFileOffset(u32 index) const
 {
 	return index < Files.size() ? Files[index].Offset : 0;

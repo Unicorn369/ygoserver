@@ -2,8 +2,8 @@
 // This file is part of the "Irrlicht Engine" and the "irrXML" project.
 // For conditions of distribution and use, see copyright notice in irrlicht.h and irrXML.h
 
-#ifndef __FAST_ATOF_H_INCLUDED__
-#define __FAST_ATOF_H_INCLUDED__
+#ifndef IRR_FAST_ATOF_H_INCLUDED
+#define IRR_FAST_ATOF_H_INCLUDED
 
 #include "irrMath.h"
 #include "irrString.h"
@@ -13,8 +13,15 @@ namespace irr
 namespace core
 {
 	//! Selection of characters which count as decimal point in fast_atof
-	// TODO: This should probably also be used in irr::core::string, but the float-to-string code
-	//		used there has to be rewritten first.
+	//! By default Irrlicht considers "." as the decimal point in numbers.
+	//! But sometimes you might run into situations where floats were written in 
+	//! a local format with another decimal point like ",".
+	//! Best solution is usually to fix those cases by converting the input.
+	//! But if you don't have that choice you can set this to ".,".
+	//! WARNING: This is not thread-safe, so don't change while there's a chance 
+	//! of another thread using fast_atof functions at the same time.
+	// TODO: This should probably also be used in irr::core::string, but
+	// the float-to-string code used there has to be rewritten first.
 	IRRLICHT_API extern irr::core::stringc LOCALE_DECIMAL_POINTS;
 
 #define IRR_ATOF_TABLE_SIZE 17
@@ -324,8 +331,8 @@ inline const char* fast_atof_move(const char* in, f32& result)
 	if ( LOCALE_DECIMAL_POINTS.findFirst(*in) >= 0 )
 	{
 		const char* afterDecimal = ++in;
-		f32 decimal = strtof10(in, &afterDecimal);
-		size_t numDecimals = afterDecimal - in;
+		const f32 decimal = strtof10(in, &afterDecimal);
+		const size_t numDecimals = afterDecimal - in;
 		if (numDecimals < IRR_ATOF_TABLE_SIZE)
 		{
 			value += decimal * fast_atof_table[numDecimals];
@@ -371,4 +378,3 @@ inline float fast_atof(const char* floatAsString, const char** out=0)
 } // end namespace irr
 
 #endif
-

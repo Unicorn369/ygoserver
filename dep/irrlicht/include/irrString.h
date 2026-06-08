@@ -2,15 +2,13 @@
 // This file is part of the "Irrlicht Engine" and the "irrXML" project.
 // For conditions of distribution and use, see copyright notice in irrlicht.h and irrXML.h
 
-#ifndef __IRR_STRING_H_INCLUDED__
-#define __IRR_STRING_H_INCLUDED__
+#ifndef IRR_STRING_H_INCLUDED
+#define IRR_STRING_H_INCLUDED
 
 #include "irrTypes.h"
 #include "irrAllocator.h"
 #include "irrMath.h"
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 namespace irr
 {
@@ -27,7 +25,16 @@ This means that c8 strings are treated as ASCII/Latin-1, not UTF-8, and
 are simply expanded to the equivalent wchar_t, while Unicode/wchar_t
 characters are truncated to 8-bit ASCII/Latin-1 characters, discarding all
 other information in the wchar_t.
+
+Helper functions for converting between UTF-8 and wchar_t are provided
+outside the string class for explicit use.
 */
+
+// forward declarations
+template <typename T, typename TAlloc = irrAllocator<T> >
+class string;
+static size_t multibyteToWString(string<wchar_t>& destination, const char* source, u32 sourceSize);
+inline s32 isdigit(s32 c);
 
 enum eLocaleID
 {
@@ -68,8 +75,20 @@ static inline u32 locale_upper ( u32 x )
 	return x >= 'a' && x <= 'z' ? x + ( 'A' - 'a' ) : x;
 }
 
+//! Convert this utf-8-encoded string to the platform's wchar.
+/** The resulting string is always NULL-terminated and well-formed.
+\param len The size of the output buffer in bytes.
+*/
+IRRLICHT_API void utf8ToWchar(const char *in, wchar_t *out, const u64 len);
 
-template <typename T, typename TAlloc = irrAllocator<T> >
+//! Convert this wchar string to utf-8.
+/** The resulting string is always NULL-terminated and well-formed.
+\param len The size of the output buffer in bytes.
+*/
+IRRLICHT_API void wcharToUtf8(const wchar_t *in, char *out, const u64 len);
+
+
+template <typename T, typename TAlloc>
 class string
 {
 public:
@@ -106,7 +125,7 @@ public:
 	: array(0), allocated(0), used(0)
 	{
 		c8 tmpbuf[255];
-		snprintf(tmpbuf, 255, "%0.6f", number);
+		snprintf_irr(tmpbuf, 255, "%0.6f", number);
 		*this = tmpbuf;
 	}
 
@@ -291,7 +310,7 @@ public:
 	}
 
 
-	//! Constructor for unicode and ascii strings
+	//! Constructor for Unicode and ASCII strings
 	template <class B>
 	string(const B* const c)
 	: array(0), allocated(0), used(0)
@@ -337,7 +356,7 @@ public:
 	}
 
 
-	//! Assignment operator for strings, ascii and unicode
+	//! Assignment operator for strings, ASCII and Unicode
 	template <class B>
 	string<T,TAlloc>& operator=(const B* const c)
 	{
@@ -353,7 +372,7 @@ public:
 			return *this;
 		}
 
-		if ((void*)c == (void*)array)
+		if ((const void*)c == (const void*)array)
 			return *this;
 
 		u32 len = 0;
@@ -394,7 +413,7 @@ public:
 	}
 
 
-	//! Append operator for strings, ascii and unicode
+	//! Append operator for strings, ASCII and Unicode
 	template <class B>
 	string<T,TAlloc> operator+(const B* const c) const
 	{
@@ -408,7 +427,7 @@ public:
 	//! Direct access operator
 	T& operator [](const u32 index)
 	{
-		_IRR_DEBUG_BREAK_IF(index>=used) // bad index
+		IRR_DEBUG_BREAK_IF(index>=used) // bad index
 		return array[index];
 	}
 
@@ -416,7 +435,7 @@ public:
 	//! Direct access operator
 	const T& operator [](const u32 index) const
 	{
-		_IRR_DEBUG_BREAK_IF(index>=used) // bad index
+		IRR_DEBUG_BREAK_IF(index>=used) // bad index
 		return array[index];
 	}
 
@@ -488,6 +507,16 @@ public:
 	bool empty() const
 	{
 		return (size() == 0);
+	}
+
+	void clear(bool releaseMemory=true)
+	{
+		if ( releaseMemory )
+		{
+			reallocate(1);
+		}
+		array[0] = 0;
+		used = 1;
 	}
 
 	//! Returns character string
@@ -569,7 +598,7 @@ public:
 	bool equalsn(const string<T,TAlloc>& other, u32 n) const
 	{
 		u32 i;
-		for(i=0; array[i] && other[i] && i < n; ++i)
+		for(i=0; i < n && array[i] && other[i]; ++i)
 			if (array[i] != other[i])
 				return false;
 
@@ -588,7 +617,7 @@ public:
 		if (!str)
 			return false;
 		u32 i;
-		for(i=0; array[i] && str[i] && i < n; ++i)
+		for(i=0; i < n && array[i] && str[i]; ++i)
 			if (array[i] != str[i])
 				return false;
 
@@ -655,7 +684,7 @@ public:
 			return *this;
 
 		--used;
-		u32 len = other.size()+1;
+		const u32 len = other.size()+1;
 
 		if (used + len > allocated)
 			reallocate(used + len);
@@ -699,6 +728,32 @@ public:
 		return *this;
 	}
 
+	//! Insert a certain amount of characters into the string before the given index
+	//\param pos Insert the characters before this index
+	//\param s String to insert. Must be at least of size n
+	//\param n Number of characters from string s to use.
+	string<T,TAlloc>& insert(u32 pos, const T* s, u32 n)
+	{
+		if ( pos < used )
+		{
+			reserve(used+n);
+
+			// move stuff behind insert point
+			const u32 end = used+n-1;
+			for (u32 i=0; i<used-pos; ++i)
+			{
+				array[end-i] = array[end-(i+n)];
+			}
+			used += n;
+
+			for (u32 i=0; i<n; ++i)
+			{
+				array[pos+i] = s[i];
+			}
+		}
+
+		return *this;
+	}
 
 	//! Reserves some memory.
 	/** \param count: Amount of characters to reserve. */
@@ -890,26 +945,25 @@ public:
 	\param make_lower copy only lower case */
 	string<T> subString(u32 begin, s32 length, bool make_lower = false ) const
 	{
+		// clamp length to maximal value
+		if ((length+begin) > size())
+			length = size()-begin;
 		// if start after string
 		// or no proper substring length
 		if ((length <= 0) || (begin>=size()))
 			return string<T>("");
-		// clamp length to maximal value
-		if ((length+begin) > size())
-			length = size()-begin;
 
 		string<T> o;
 		o.reserve(length+1);
 
-		s32 i;
 		if ( !make_lower )
 		{
-			for (i=0; i<length; ++i)
+			for (s32 i=0; i<length; ++i)
 				o.array[i] = array[i+begin];
 		}
 		else
 		{
-			for (i=0; i<length; ++i)
+			for (s32 i=0; i<length; ++i)
 				o.array[i] = locale_lower ( array[i+begin] );
 		}
 
@@ -1214,7 +1268,7 @@ public:
 
 	//! Trims the string.
 	/** Removes the specified characters (by default, Latin-1 whitespace)
-	from the begining and the end of the string. */
+	from the beginning and the end of the string. */
 	string<T,TAlloc>& trim(const string<T,TAlloc> & whitespace = " \t\n\r")
 	{
 		// find start and end of the substring without the specified characters
@@ -1227,6 +1281,41 @@ public:
 		return (*this = subString(begin, (end +1) - begin));
 	}
 
+	//! Erase 0's at the end when a string ends with a floating point number
+	/** After generating strings from floats we often end up with strings
+		ending up with lots of zeros which don't add any value. Erase 'em all.
+		Examples: "0.100000" becomes "0.1"
+	              "10.000000" becomes "10"
+				  "foo 3.140000" becomes "foo 3.14"
+				  "no_num.000" stays "no_num.000"
+				  "1." stays "1."
+	*/
+	string<T,TAlloc>& eraseTrailingFloatZeros(char decimalPoint='.')
+	{
+		s32 i=findLastCharNotInList("0", 1);
+		if ( i > 0 && (u32)i < used-2 )	// non 0 must be found and not last char (also used is at least 2 when i > 0)
+		{
+			u32 eraseStart=i+1;
+			u32 dot=0;
+			if( core::isdigit(array[i]) )
+			{
+				while( --i>0 && core::isdigit(array[i]) );
+				if ( array[i] == decimalPoint )
+					dot = i;
+			}
+			else if ( array[i] == decimalPoint )
+			{
+				dot = i;
+				eraseStart = i;
+			}
+			if ( dot > 0 && core::isdigit(array[dot-1]) )
+			{
+				array[eraseStart] = 0;
+				used = eraseStart+1;
+			}
+		}
+		return *this;
+	}
 
 	//! Erases a character from the string.
 	/** May be slow, because all elements
@@ -1234,7 +1323,7 @@ public:
 	\param index: Index of element to be erased. */
 	string<T,TAlloc>& erase(u32 index)
 	{
-		_IRR_DEBUG_BREAK_IF(index>=used) // access violation
+		IRR_DEBUG_BREAK_IF(index>=used) // access violation
 
 		for (u32 i=index+1; i<used; ++i)
 			array[i-1] = array[i];
@@ -1276,17 +1365,18 @@ public:
 		return used > 1 ? array[used-2] : 0;
 	}
 
-	//! split string into parts.
+	//! Split string into parts (tokens).
 	/** This method will split a string at certain delimiter characters
 	into the container passed in as reference. The type of the container
 	has to be given as template parameter. It must provide a push_back and
 	a size method.
-	\param ret The result container
-	\param c C-style string of delimiter characters
-	\param count Number of delimiter characters
+	\param ret The result container. Tokens are added, the container is not cleared.
+	\param delimiter C-style string of delimiter characters
+	\param countDelimiters Number of delimiter characters
 	\param ignoreEmptyTokens Flag to avoid empty substrings in the result
-	container. If two delimiters occur without a character in between, an
-	empty substring would be placed in the result. If this flag is set,
+	container. If two delimiters occur without a character in between or an
+	empty substring would be placed in the result. Or if a delimiter is the last
+	character an empty substring would be added at the end.	If this flag is set,
 	only non-empty strings are stored.
 	\param keepSeparators Flag which allows to add the separator to the
 	result string. If this flag is true, the concatenation of the
@@ -1295,35 +1385,43 @@ public:
 	\return The number of resulting substrings
 	*/
 	template<class container>
-	u32 split(container& ret, const T* const c, u32 count=1, bool ignoreEmptyTokens=true, bool keepSeparators=false) const
+	u32 split(container& ret, const T* const delimiter, u32 countDelimiters=1, bool ignoreEmptyTokens=true, bool keepSeparators=false) const
 	{
-		if (!c)
+		if (!delimiter)
 			return 0;
 
 		const u32 oldSize=ret.size();
-		u32 lastpos = 0;
-		bool lastWasSeparator = false;
+
+		u32 tokenStartIdx = 0;
 		for (u32 i=0; i<used; ++i)
 		{
-			bool foundSeparator = false;
-			for (u32 j=0; j<count; ++j)
+			for (u32 j=0; j<countDelimiters; ++j)
 			{
-				if (array[i] == c[j])
+				if (array[i] == delimiter[j])
 				{
-					if ((!ignoreEmptyTokens || i - lastpos != 0) &&
-							!lastWasSeparator)
-						ret.push_back(string<T,TAlloc>(&array[lastpos], i - lastpos));
-					foundSeparator = true;
-					lastpos = (keepSeparators ? i : i + 1);
+					if (i - tokenStartIdx > 0)
+						ret.push_back(string<T,TAlloc>(&array[tokenStartIdx], i - tokenStartIdx));
+					else if ( !ignoreEmptyTokens )
+						ret.push_back(string<T,TAlloc>());
+					if ( keepSeparators )
+					{
+						ret.push_back(string<T,TAlloc>(&array[i], 1));
+					}
+
+					tokenStartIdx = i+1;
 					break;
 				}
 			}
-			lastWasSeparator = foundSeparator;
 		}
-		if ((used - 1) > lastpos)
-			ret.push_back(string<T,TAlloc>(&array[lastpos], (used - 1) - lastpos));
+		if ((used - 1) > tokenStartIdx)
+			ret.push_back(string<T,TAlloc>(&array[tokenStartIdx], (used - 1) - tokenStartIdx));
+		 else if ( !ignoreEmptyTokens )
+                ret.push_back(string<T,TAlloc>());
+
 		return ret.size()-oldSize;
 	}
+
+	friend size_t multibyteToWString(string<wchar_t>& destination, const char* source, u32 sourceSize);
 
 private:
 
@@ -1335,7 +1433,7 @@ private:
 		array = allocator.allocate(new_size); //new T[new_size];
 		allocated = new_size;
 
-		u32 amount = used < new_size ? used : new_size;
+		const u32 amount = used < new_size ? used : new_size;
 		for (u32 i=0; i<amount; ++i)
 			array[i] = old_array[i];
 
@@ -1360,15 +1458,98 @@ typedef string<c8> stringc;
 //! Typedef for wide character strings
 typedef string<wchar_t> stringw;
 
-//! wrap of mbstowcs
+//! Convert multibyte string to wide-character string
+/** Wrapper around mbstowcs from standard library, but directly using Irrlicht string class.
+What the function does exactly depends on the LC_CTYPE of the current c locale.
+\param destination Wide-character string receiving the converted source
+\param source multibyte string
+\return The number of wide characters written to destination, not including the eventual terminating null character or -1 when conversion failed */
+static inline size_t multibyteToWString(string<wchar_t>& destination, const core::string<c8>& source)
+{
+	return multibyteToWString(destination, source.c_str(), (u32)source.size());
+}
+
+//! Convert multibyte string to wide-character string
+/** Wrapper around mbstowcs from standard library, but directly writing to Irrlicht string class.
+What the function does exactly depends on the LC_CTYPE of the current c locale.
+\param destination Wide-character string receiving the converted source
+\param source multibyte string
+\return The number of wide characters written to destination, not including the eventual terminating null character  or -1 when conversion failed. */
+static inline size_t multibyteToWString(string<wchar_t>& destination, const char* source)
+{
+	const u32 s = source ? (u32)strlen(source) : 0;
+	return multibyteToWString(destination, source, s);
+}
+
+//! Internally used by the other multibyteToWString functions
+static size_t multibyteToWString(string<wchar_t>& destination, const char* source, u32 sourceSize)
+{
+	if ( sourceSize )
+	{
+		destination.reserve(sourceSize+1);
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4996)	// 'mbstowcs': This function or variable may be unsafe. Consider using mbstowcs_s instead.
+#endif
+		const size_t written = mbstowcs(destination.array, source, (size_t)sourceSize);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+		if ( written != (size_t)-1 )
+		{
+			destination.used = (u32)written+1;
+			destination.array[destination.used-1] = 0;
+		}
+		else
+		{
+			// Likely character which got converted until the invalid character was encountered are in destination now.
+			// And it seems even 0-terminated, but I found no documentation anywhere that this (the 0-termination) is guaranteed :-(
+			destination.clear();
+		}
+		return written;
+	}
+	else
+	{
+		destination.clear();
+		return 0;
+	}
+}
+
+//! Converts UTF-8 string to wide character string.
+/** Uses utf8ToWchar which is platform independent and don't rely on c locale settings.
+\return Pointer to newly allocated wide character string; caller must delete[]. */
 static inline wchar_t* toWideChar(const char* p)
 {
-	size_t lenOld = strlen(p);
-	wchar_t* ws = new wchar_t[lenOld + 1];
-	size_t lenNew = mbstowcs(ws, p, lenOld);
-	ws[lenNew] = 0;
+	if (!p)
+	{
+		wchar_t* ws = new wchar_t[1];
+		ws[0] = 0;
+		return ws;
+	}
+	const size_t len = strlen(p) + 1;
+	wchar_t* ws = new wchar_t[len];
+	utf8ToWchar(p, ws, len * sizeof(wchar_t));
 	return ws;
 }
+
+//! Converts wide character string to UTF-8 string.
+/** Uses wcharToUtf8 which is platform independent and don't rely on c locale settings.
+\return Pointer to newly allocated multibyte string; caller must delete[]. */
+static inline char* toMultiByte(const wchar_t* p)
+{
+	if (!p)
+	{
+		char* cs = new char[1];
+		cs[0] = 0;
+		return cs;
+	}
+	// Worst case: 4 UTF-8 bytes per wchar_t codepoint
+	const size_t bufSize = wcslen(p) * 4 + 1;
+	char* cs = new char[bufSize];
+	wcharToUtf8(p, cs, bufSize);
+	return cs;
+}
+
 
 } // end namespace core
 } // end namespace irr

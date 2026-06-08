@@ -1,0 +1,85 @@
+diff --git a/ygopro-server.js b/ygopro-server.js
+index 32c78db..18d45fd 100644
+--- a/ygopro-server.js
++++ b/ygopro-server.js
+@@ -3208,6 +3208,53 @@
+     //log.info info
+     info.pass = info.pass.trim();
+     client.pass = info.pass;
++// 启用arena
++    if (settings.modules.arena_mode.enabled && settings.modules.arena_mode.mode === 'all' && ((info.pass.slice(0, 2) === 'M#') || info.pass.slice(0, 2) === 'S#')) {
++        room = (await ROOM_find_or_create_by_name(info.pass));
++        if (room) {
++          ref1 = room.get_playing_player();
++          for (m = 0, len2 = ref1.length; m < len2; m++) {
++            player = ref1[m];
++            if (!(player && player.name === client.name)) {
++              continue;
++            }
++            ygopro.stoc_die(client, '${invalid_password_unauthorized}');
++            return;
++          }
++          room.private = true;
++          if (info.pass.slice(0, 2) === 'M#') {
++            room.arena = "athletic";
++            //room.welcome = "${athletic_arena_tip}";
++          } else {
++            room.arena = "entertain";
++            //room.welcome = "${entertain_arena_tip}";
++          }
++          room.max_player = 2;
++        }
++    }
++    if (settings.modules.arena_mode.enabled && ((settings.modules.arena_mode.mode === 'athletic' && info.pass.slice(0, 2) === 'M#') || (settings.modules.arena_mode.mode === 'entertain' && info.pass.slice(0, 2) === 'S#'))) {
++        room = (await ROOM_find_or_create_by_name(info.pass));
++        if (room) {
++          ref1 = room.get_playing_player();
++          for (m = 0, len2 = ref1.length; m < len2; m++) {
++            player = ref1[m];
++            if (!(player && player.name === client.name)) {
++              continue;
++            }
++            ygopro.stoc_die(client, '${invalid_password_unauthorized}');
++            return;
++          }
++          room.private = true;
++          room.arena = settings.modules.arena_mode.mode;
++          room.max_player = 2;
++          //if (room.arena === "athletic") {
++          //  room.welcome = "${athletic_arena_tip}";
++          //} else {
++          //  room.welcome = "${entertain_arena_tip}";
++          //}
++        }
++    }
++//
+     if (CLIENT_is_able_to_reconnect(client) || CLIENT_is_able_to_kick_reconnect(client)) {
+       CLIENT_pre_reconnect(client);
+       return;
+@@ -3640,7 +3687,25 @@
+     if (room.welcome2) {
+       ygopro.stoc_send_chat(client, room.welcome2, ygopro.constants.COLORS.PINK);
+     }
+-    if (settings.modules.arena_mode.enabled && !client.is_local && settings.modules.arena_mode.get_score) { //and not client.score_shown
++// 启用arena
++    if (settings.modules.arena_mode.enabled && settings.modules.arena_mode.mode === 'all') {
++      if (room.random_type === 'M') {
++        room.arena = "athletic";
++      }
++      if (room.random_type === 'S') {
++        room.arena = "entertain";
++      }
++    }
++    if (settings.modules.arena_mode.enabled && settings.modules.arena_mode.mode != 'all') {
++      if (settings.modules.arena_mode.mode === 'athletic' && room.random_type === 'M') {
++        room.arena = settings.modules.arena_mode.mode;
++      }
++      if (settings.modules.arena_mode.mode === 'entertain' && room.random_type === 'S') {
++        room.arena = settings.modules.arena_mode.mode;
++      }
++    }
++    if (settings.modules.arena_mode.enabled && !client.is_local && settings.modules.arena_mode.get_score && room.arena) { //and not client.score_shown
++//
+       request({
+         url: settings.modules.arena_mode.get_score + encodeURIComponent(client.name),
+         json: true

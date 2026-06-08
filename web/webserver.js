@@ -5,7 +5,7 @@ const path = require('path');
 const server = http.createServer((req, res) => {
     const filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
     const fileExt = path.extname(filePath);
-    let contentType = 'text/html';
+    let contentType = 'text/html;charset=UTF-8';
     if (fileExt === '.css') contentType = 'text/css';
     else if (fileExt === '.js') contentType = 'text/javascript';
     else if (fileExt === '.json') contentType = 'application/json';
@@ -17,8 +17,8 @@ const server = http.createServer((req, res) => {
             if (err.code == 'ENOENT') {
                 // page not found
                 fs.readFile(path.join(__dirname, '404.html'), (err, content) => {
-                    res.writeHead(404, { 'Content-Type': 'text/html' });
-                    res.end(content, 'utf-8');
+                    res.writeHead(404, { 'Content-Type': contentType });
+                    res.end(content, 'UTF-8');
                 });
             } else {
                 // some server error
@@ -28,7 +28,7 @@ const server = http.createServer((req, res) => {
         } else {
             // success
             res.writeHead(200, { 'Content-Type': contentType });
-            res.end(content, 'utf-8');
+            res.end(content, 'UTF-8');
         }
     });
 });

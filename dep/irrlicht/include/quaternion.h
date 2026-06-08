@@ -2,18 +2,23 @@
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
-#ifndef __IRR_QUATERNION_H_INCLUDED__
-#define __IRR_QUATERNION_H_INCLUDED__
+#ifndef IRR_QUATERNION_H_INCLUDED
+#define IRR_QUATERNION_H_INCLUDED
 
 #include "irrTypes.h"
 #include "irrMath.h"
 #include "matrix4.h"
 #include "vector3d.h"
 
-// Between Irrlicht 1.7 and Irrlicht 1.8 the quaternion-matrix conversions got fixed.
-// This define disables all involved functions completely to allow finding all places 
-// where the wrong conversions had been in use.
-#define IRR_TEST_BROKEN_QUATERNION_USE 0
+// NOTE: You *only* need this when updating an application from Irrlicht before 1.8 to Irrlicht 1.8 or later.
+// Between Irrlicht 1.7 and Irrlicht 1.8 the quaternion-matrix conversions changed.
+// Before the fix they had mixed left- and right-handed rotations.
+// To test if your code was affected by the change enable IRR_TEST_BROKEN_QUATERNION_USE and try to compile your application.
+// This defines removes those functions so you get compile errors anywhere you use them in your code.
+// For every line with a compile-errors you have to change the corresponding lines like that:
+// - When you pass the matrix to the quaternion constructor then replace the matrix by the transposed matrix.
+// - For uses of getMatrix() you have to use quaternion::getMatrix_transposed instead.
+// #define IRR_TEST_BROKEN_QUATERNION_USE
 
 namespace irr
 {
@@ -33,27 +38,24 @@ class quaternion
 		//! Constructor
 		quaternion(f32 x, f32 y, f32 z, f32 w) : X(x), Y(y), Z(z), W(w) { }
 
-		//! Constructor which converts euler angles (radians) to a quaternion
+		//! Constructor which converts Euler angles (radians) to a quaternion
 		quaternion(f32 x, f32 y, f32 z);
 
-		//! Constructor which converts euler angles (radians) to a quaternion
+		//! Constructor which converts Euler angles (radians) to a quaternion
 		quaternion(const vector3df& vec);
 
-#if !IRR_TEST_BROKEN_QUATERNION_USE
+#ifndef IRR_TEST_BROKEN_QUATERNION_USE
 		//! Constructor which converts a matrix to a quaternion
 		quaternion(const matrix4& mat);
 #endif
 
-		//! Equalilty operator
+		//! Equality operator
 		bool operator==(const quaternion& other) const;
 
 		//! inequality operator
 		bool operator!=(const quaternion& other) const;
 
-		//! Assignment operator
-		inline quaternion& operator=(const quaternion& other);
-
-#if !IRR_TEST_BROKEN_QUATERNION_USE
+#ifndef IRR_TEST_BROKEN_QUATERNION_USE
 		//! Matrix assignment operator
 		inline quaternion& operator=(const matrix4& other);
 #endif
@@ -62,6 +64,7 @@ class quaternion
 		quaternion operator+(const quaternion& other) const;
 
 		//! Multiplication operator
+		//! Be careful, unfortunately the operator order here is opposite of that in CMatrix4::operator*
 		quaternion operator*(const quaternion& other) const;
 
 		//! Multiplication operator with scalar
@@ -82,10 +85,10 @@ class quaternion
 		//! Sets new quaternion
 		inline quaternion& set(f32 x, f32 y, f32 z, f32 w);
 
-		//! Sets new quaternion based on euler angles (radians)
+		//! Sets new quaternion based on Euler angles (radians)
 		inline quaternion& set(f32 x, f32 y, f32 z);
 
-		//! Sets new quaternion based on euler angles (radians)
+		//! Sets new quaternion based on Euler angles (radians)
 		inline quaternion& set(const core::vector3df& vec);
 
 		//! Sets new quaternion from other quaternion
@@ -98,10 +101,12 @@ class quaternion
 		//! Normalizes the quaternion
 		inline quaternion& normalize();
 
-#if !IRR_TEST_BROKEN_QUATERNION_USE
+#ifndef IRR_TEST_BROKEN_QUATERNION_USE
 		//! Creates a matrix from this quaternion
 		matrix4 getMatrix() const;
-#endif 
+#endif
+		//! Faster method to create a rotation matrix, you should normalize the quaternion before!
+		void getMatrixFast(matrix4 &dest) const;
 
 		//! Creates a matrix from this quaternion
 		void getMatrix( matrix4 &dest, const core::vector3df &translation=core::vector3df() ) const;
@@ -125,20 +130,36 @@ class quaternion
 		*/
 		void getMatrixCenter( matrix4 &dest, const core::vector3df &center, const core::vector3df &translation ) const;
 
-		//! Creates a matrix from this quaternion
+		//! Faster method to create a transposed matrix, you should normalize the quaternion before!
+		inline void getMatrixFast_transposed(matrix4 &dest) const;
+
+		//! Creates a transposed matrix from this quaternion
 		inline void getMatrix_transposed( matrix4 &dest ) const;
 
 		//! Inverts this quaternion
 		quaternion& makeInverse();
 
 		//! Set this quaternion to the linear interpolation between two quaternions
-		/** \param q1 First quaternion to be interpolated.
+		/** NOTE: lerp result is *not* a normalized quaternion. In most cases
+		you will want to use lerpN instead as most other quaternion functions expect
+		to work with a normalized quaternion.
+		\param q1 First quaternion to be interpolated.
 		\param q2 Second quaternion to be interpolated.
 		\param time Progress of interpolation. For time=0 the result is
 		q1, for time=1 the result is q2. Otherwise interpolation
-		between q1 and q2.
+		between q1 and q2. Result is not normalized.
 		*/
 		quaternion& lerp(quaternion q1, quaternion q2, f32 time);
+
+		//! Set this quaternion to the linear interpolation between two quaternions and normalize the result
+		/**
+		\param q1 First quaternion to be interpolated.
+		\param q2 Second quaternion to be interpolated.
+		\param time Progress of interpolation. For time=0 the result is
+		q1, for time=1 the result is q2. Otherwise interpolation
+		between q1 and q2. Result is normalized.
+		*/
+		quaternion& lerpN(quaternion q1, quaternion q2, f32 time);
 
 		//! Set this quaternion to the result of the spherical interpolation between two quaternions
 		/** \param q1 First quaternion to be interpolated.
@@ -155,7 +176,7 @@ class quaternion
 		quaternion& slerp(quaternion q1, quaternion q2,
 				f32 time, f32 threshold=.05f);
 
-		//! Create quaternion from rotation angle and rotation axis.
+		//! Set this quaternion to represent a rotation from angle and axis.
 		/** Axis must be unit length.
 		The quaternion representing the rotation is
 		q = cos(A/2)+sin(A/2)*(x*i+y*j+z*k).
@@ -166,7 +187,7 @@ class quaternion
 		//! Fills an angle (radians) around an axis (unit vector)
 		void toAngleAxis (f32 &angle, core::vector3df& axis) const;
 
-		//! Output this quaternion to an euler angle (radians)
+		//! Output this quaternion to an Euler angle (radians)
 		void toEuler(vector3df& euler) const;
 
 		//! Set quaternion to identity
@@ -183,20 +204,20 @@ class quaternion
 };
 
 
-// Constructor which converts euler angles to a quaternion
+// Constructor which converts Euler angles to a quaternion
 inline quaternion::quaternion(f32 x, f32 y, f32 z)
 {
 	set(x,y,z);
 }
 
 
-// Constructor which converts euler angles to a quaternion
+// Constructor which converts Euler angles to a quaternion
 inline quaternion::quaternion(const vector3df& vec)
 {
 	set(vec.X,vec.Y,vec.Z);
 }
 
-#if !IRR_TEST_BROKEN_QUATERNION_USE
+#ifndef IRR_TEST_BROKEN_QUATERNION_USE
 // Constructor which converts a matrix to a quaternion
 inline quaternion::quaternion(const matrix4& mat)
 {
@@ -219,17 +240,8 @@ inline bool quaternion::operator!=(const quaternion& other) const
 	return !(*this == other);
 }
 
-// assignment operator
-inline quaternion& quaternion::operator=(const quaternion& other)
-{
-	X = other.X;
-	Y = other.Y;
-	Z = other.Z;
-	W = other.W;
-	return *this;
-}
 
-#if !IRR_TEST_BROKEN_QUATERNION_USE
+#ifndef IRR_TEST_BROKEN_QUATERNION_USE
 // matrix assignment operator
 inline quaternion& quaternion::operator=(const matrix4& m)
 {
@@ -333,7 +345,7 @@ inline quaternion quaternion::operator+(const quaternion& b) const
 	return quaternion(X+b.X, Y+b.Y, Z+b.Z, W+b.W);
 }
 
-#if !IRR_TEST_BROKEN_QUATERNION_USE
+#ifndef IRR_TEST_BROKEN_QUATERNION_USE
 // Creates a matrix from this quaternion
 inline matrix4 quaternion::getMatrix() const
 {
@@ -343,12 +355,12 @@ inline matrix4 quaternion::getMatrix() const
 }
 #endif
 
-/*!
-	Creates a matrix from this quaternion
-*/
-inline void quaternion::getMatrix(matrix4 &dest,
-		const core::vector3df &center) const
+//! Faster method to create a rotation matrix, you should normalize the quaternion before!
+inline void quaternion::getMatrixFast( matrix4 &dest) const
 {
+	// TODO:
+	// gpu quaternion skinning => fast Bones transform chain O_O YEAH!
+	// http://www.mrelusive.com/publications/papers/SIMD-From-Quaternion-to-Matrix-and-Back.pdf
 	dest[0] = 1.0f - 2.0f*Y*Y - 2.0f*Z*Z;
 	dest[1] = 2.0f*X*Y + 2.0f*Z*W;
 	dest[2] = 2.0f*X*Z - 2.0f*Y*W;
@@ -364,12 +376,30 @@ inline void quaternion::getMatrix(matrix4 &dest,
 	dest[10] = 1.0f - 2.0f*X*X - 2.0f*Y*Y;
 	dest[11] = 0.0f;
 
+	dest[12] = 0.f;
+	dest[13] = 0.f;
+	dest[14] = 0.f;
+	dest[15] = 1.f;
+
+	dest.setDefinitelyIdentityMatrix(false);
+}
+
+/*!
+	Creates a matrix from this quaternion
+*/
+inline void quaternion::getMatrix(matrix4 &dest,
+		const core::vector3df &center) const
+{
+	// ok creating a copy may be slower, but at least avoid internal
+	// state chance (also because otherwise we cannot keep this method "const").
+
+	quaternion q( *this);
+	q.normalize();
+	q.getMatrixFast(dest);
+
 	dest[12] = center.X;
 	dest[13] = center.Y;
 	dest[14] = center.Z;
-	dest[15] = 1.f;
-
-	dest.setDefinitelyIdentityMatrix ( false );
 }
 
 
@@ -389,26 +419,15 @@ inline void quaternion::getMatrixCenter(matrix4 &dest,
 					const core::vector3df &center,
 					const core::vector3df &translation) const
 {
-	dest[0] = 1.0f - 2.0f*Y*Y - 2.0f*Z*Z;
-	dest[1] = 2.0f*X*Y + 2.0f*Z*W;
-	dest[2] = 2.0f*X*Z - 2.0f*Y*W;
-	dest[3] = 0.0f;
-
-	dest[4] = 2.0f*X*Y - 2.0f*Z*W;
-	dest[5] = 1.0f - 2.0f*X*X - 2.0f*Z*Z;
-	dest[6] = 2.0f*Z*Y + 2.0f*X*W;
-	dest[7] = 0.0f;
-
-	dest[8] = 2.0f*X*Z + 2.0f*Y*W;
-	dest[9] = 2.0f*Z*Y - 2.0f*X*W;
-	dest[10] = 1.0f - 2.0f*X*X - 2.0f*Y*Y;
-	dest[11] = 0.0f;
+	quaternion q(*this);
+	q.normalize();
+	q.getMatrixFast(dest);
 
 	dest.setRotationCenter ( center, translation );
 }
 
-// Creates a matrix from this quaternion
-inline void quaternion::getMatrix_transposed(matrix4 &dest) const
+//! Faster method to create a transposed matrix, you should normalize the quaternion before!
+inline void quaternion::getMatrixFast_transposed(matrix4 &dest) const
 {
 	dest[0] = 1.0f - 2.0f*Y*Y - 2.0f*Z*Z;
 	dest[4] = 2.0f*X*Y + 2.0f*Z*W;
@@ -433,6 +452,14 @@ inline void quaternion::getMatrix_transposed(matrix4 &dest) const
 	dest.setDefinitelyIdentityMatrix(false);
 }
 
+// Creates a matrix from this quaternion
+inline void quaternion::getMatrix_transposed(matrix4 &dest) const
+{
+	quaternion q(*this);
+	q.normalize();
+	q.getMatrixFast_transposed(dest);
+}
+
 
 // Inverts this quaternion
 inline quaternion& quaternion::makeInverse()
@@ -453,7 +480,7 @@ inline quaternion& quaternion::set(f32 x, f32 y, f32 z, f32 w)
 }
 
 
-// sets new quaternion based on euler angles
+// sets new quaternion based on Euler angles
 inline quaternion& quaternion::set(f32 x, f32 y, f32 z)
 {
 	f64 angle;
@@ -483,10 +510,10 @@ inline quaternion& quaternion::set(f32 x, f32 y, f32 z)
 	return normalize();
 }
 
-// sets new quaternion based on euler angles
+// sets new quaternion based on Euler angles
 inline quaternion& quaternion::set(const core::vector3df& vec)
 {
-	return set(vec.X, vec.Y, vec.Z);
+	return set( vec.X, vec.Y, vec.Z);
 }
 
 // sets new quaternion based on other quaternion
@@ -499,36 +526,38 @@ inline quaternion& quaternion::set(const core::quaternion& quat)
 //! returns if this quaternion equals the other one, taking floating point rounding errors into account
 inline bool quaternion::equals(const quaternion& other, const f32 tolerance) const
 {
-	return core::equals(X, other.X, tolerance) &&
-		core::equals(Y, other.Y, tolerance) &&
-		core::equals(Z, other.Z, tolerance) &&
-		core::equals(W, other.W, tolerance);
+	return core::equals( X, other.X, tolerance) &&
+		core::equals( Y, other.Y, tolerance) &&
+		core::equals( Z, other.Z, tolerance) &&
+		core::equals( W, other.W, tolerance);
 }
 
 
 // normalizes the quaternion
 inline quaternion& quaternion::normalize()
 {
-	const f32 n = X*X + Y*Y + Z*Z + W*W;
-
-	if (n == 1)
-		return *this;
-
-	//n = 1.0f / sqrtf(n);
-	return (*this *= reciprocal_squareroot ( n ));
+	const f64 n = X*X + Y*Y + Z*Z + W*W;
+	if ( n > 0 )
+		*this *= (f32)reciprocal_squareroot(n);
+	return *this;
 }
 
-
-// set this quaternion to the result of the linear interpolation between two quaternions
-inline quaternion& quaternion::lerp(quaternion q1, quaternion q2, f32 time)
+// Set this quaternion to the result of the linear interpolation between two quaternions
+inline quaternion& quaternion::lerp( quaternion q1, quaternion q2, f32 time)
 {
 	const f32 scale = 1.0f - time;
 	return (*this = (q1*scale) + (q2*time));
 }
 
+// Set this quaternion to the result of the linear interpolation between two quaternions and normalize the result
+inline quaternion& quaternion::lerpN( quaternion q1, quaternion q2, f32 time)
+{
+	const f32 scale = 1.0f - time;
+	return (*this = ((q1*scale) + (q2*time)).normalize() );
+}
 
 // set this quaternion to the result of the interpolation between two quaternions
-inline quaternion& quaternion::slerp(quaternion q1, quaternion q2, f32 time, f32 threshold)
+inline quaternion& quaternion::slerp( quaternion q1, quaternion q2, f32 time, f32 threshold)
 {
 	f32 angle = q1.dotProduct(q2);
 
@@ -547,8 +576,8 @@ inline quaternion& quaternion::slerp(quaternion q1, quaternion q2, f32 time, f32
 		const f32 invscale = sinf(theta * time) * invsintheta;
 		return (*this = (q1*scale) + (q2*invscale));
 	}
-	else // linear interploation
-		return lerp(q1,q2,time);
+	else // linear interpolation
+		return lerpN(q1,q2,time);
 }
 
 
@@ -636,7 +665,7 @@ inline vector3df quaternion::operator* (const vector3df& v) const
 	// nVidia SDK implementation
 
 	vector3df uv, uuv;
-	vector3df qvec(X, Y, Z);
+	const vector3df qvec(X, Y, Z);
 	uv = qvec.crossProduct(v);
 	uuv = qvec.crossProduct(uv);
 	uv *= (2.0f * W);
@@ -658,6 +687,8 @@ inline core::quaternion& quaternion::makeIdentity()
 inline core::quaternion& quaternion::rotationFromTo(const vector3df& from, const vector3df& to)
 {
 	// Based on Stan Melax's article in Game Programming Gems
+	// Optimized by Robert Eisele: https://raw.org/proof/quaternion-from-two-vectors
+
 	// Copy, since cannot modify local
 	vector3df v0 = from;
 	vector3df v1 = to;
@@ -682,10 +713,8 @@ inline core::quaternion& quaternion::rotationFromTo(const vector3df& from, const
 		return set(axis.X, axis.Y, axis.Z, 0).normalize();
 	}
 
-	const f32 s = sqrtf( (1+d)*2 ); // optimize inv_sqrt
-	const f32 invs = 1.f / s;
-	const vector3df c = v0.crossProduct(v1)*invs;
-	return set(c.X, c.Y, c.Z, s * 0.5f).normalize();
+	const vector3df c = v0.crossProduct(v1);
+	return set(c.X, c.Y, c.Z, 1 + d).normalize();
 }
 
 
@@ -693,4 +722,3 @@ inline core::quaternion& quaternion::rotationFromTo(const vector3df& from, const
 } // end namespace irr
 
 #endif
-

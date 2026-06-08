@@ -2,10 +2,14 @@
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
-#ifndef __I_IREFERENCE_COUNTED_H_INCLUDED__
-#define __I_IREFERENCE_COUNTED_H_INCLUDED__
+#ifndef IRR_I_IREFERENCE_COUNTED_H_INCLUDED
+#define IRR_I_IREFERENCE_COUNTED_H_INCLUDED
 
 #include "irrTypes.h"
+
+#ifdef _IRR_COMPILE_WITH_LEAK_HUNTER_
+	#include "leakHunter.h"
+#endif
 
 namespace irr
 {
@@ -46,11 +50,17 @@ namespace irr
 		IReferenceCounted()
 			: DebugName(0), ReferenceCounter(1)
 		{
+#ifdef _IRR_COMPILE_WITH_LEAK_HUNTER_
+			LeakHunter::addObject(this);
+#endif
 		}
 
 		//! Destructor.
 		virtual ~IReferenceCounted()
 		{
+			#ifdef _IRR_COMPILE_WITH_LEAK_HUNTER_
+				LeakHunter::removeObject(this);
+			#endif
 		}
 
 		//! Grabs the object. Increments the reference counter by one.
@@ -116,7 +126,7 @@ namespace irr
 		bool drop() const
 		{
 			// someone is doing bad reference counting.
-			_IRR_DEBUG_BREAK_IF(ReferenceCounter <= 0)
+			IRR_DEBUG_BREAK_IF(ReferenceCounter <= 0)
 
 			--ReferenceCounter;
 			if (!ReferenceCounter)
@@ -167,4 +177,3 @@ namespace irr
 } // end namespace irr
 
 #endif
-

@@ -8,6 +8,10 @@
 #include "IXMLWriter.h"
 #include "IVideoDriver.h"
 
+#ifndef _IRR_COMPILE_WITH_XML_
+	#include "CXMLReader.h"	// for noXML
+#endif
+
 namespace irr
 {
 namespace io
@@ -72,23 +76,21 @@ void CAttributes::setAttribute(const c8* attributeName, const c8* value)
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setStringAttribute()
 //! or 0 if attribute is not set.
-core::stringc CAttributes::getAttributeAsString(const c8* attributeName)
+core::stringc CAttributes::getAttributeAsString(const c8* attributeName, const core::stringc& defaultNotFound) const
 {
-	core::stringc str;
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getString();
 	else
-		return str;
+		return defaultNotFound;
 }
 
 //! Gets a string attribute.
 //! \param attributeName: Name of the attribute to get.
 //! \param target: Buffer where the string is copied to.
-void CAttributes::getAttributeAsString(const c8* attributeName, char* target)
+void CAttributes::getAttributeAsString(const c8* attributeName, char* target) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 	{
 		core::stringc str = att->getString();
@@ -100,14 +102,12 @@ void CAttributes::getAttributeAsString(const c8* attributeName, char* target)
 
 //! Returns string attribute value by index.
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-core::stringc CAttributes::getAttributeAsString(s32 index)
+core::stringc CAttributes::getAttributeAsString(s32 index, const core::stringc& defaultNotFound) const
 {
-	core::stringc str;
-
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getString();
 
-	return str;
+	return defaultNotFound;
 }
 
 
@@ -142,23 +142,21 @@ void CAttributes::setAttribute(const c8* attributeName, const wchar_t* value)
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setStringAttribute()
 //! or 0 if attribute is not set.
-core::stringw CAttributes::getAttributeAsStringW(const c8* attributeName)
+core::stringw CAttributes::getAttributeAsStringW(const c8* attributeName, const core::stringw& defaultNotFound) const
 {
-	core::stringw str;
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		str = att->getStringW();
-
-	return str;
+		return att->getStringW();
+	else
+		return defaultNotFound;
 }
 
 //! Gets a string attribute.
 //! \param attributeName: Name of the attribute to get.
 //! \param target: Buffer where the string is copied to.
-void CAttributes::getAttributeAsStringW(const c8* attributeName, wchar_t* target)
+void CAttributes::getAttributeAsStringW(const c8* attributeName, wchar_t* target) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 	{
 		core::stringw str = att->getStringW();
@@ -170,13 +168,12 @@ void CAttributes::getAttributeAsStringW(const c8* attributeName, wchar_t* target
 
 //! Returns string attribute value by index.
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-core::stringw CAttributes::getAttributeAsStringW(s32 index)
+core::stringw CAttributes::getAttributeAsStringW(s32 index, const core::stringw& defaultNotFound) const
 {
-
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getStringW();
 	else
-		return core::stringw();
+		return defaultNotFound;
 }
 
 
@@ -199,24 +196,22 @@ void CAttributes::setAttribute(const c8* attributeName, const core::array<core::
 }
 
 //! Gets an attribute as an array of wide strings.
-core::array<core::stringw> CAttributes::getAttributeAsArray(const c8* attributeName)
+core::array<core::stringw> CAttributes::getAttributeAsArray(const c8* attributeName, const core::array<core::stringw>& defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getArray();
 	else
-		return core::array<core::stringw>();
+		return defaultNotFound;
 }
 
 //! Returns attribute value as an array of wide strings by index.
-core::array<core::stringw> CAttributes::getAttributeAsArray(s32 index)
+core::array<core::stringw> CAttributes::getAttributeAsArray(s32 index, const core::array<core::stringw>& defaultNotFound) const
 {
-	core::array<core::stringw> ret;
-
 	if (index >= 0 && index < (s32)Attributes.size())
-		ret = Attributes[index]->getArray();
+		return Attributes[index]->getArray();
 
-	return ret;
+	return defaultNotFound;
 }
 
 //! Sets an attribute as an array of wide strings
@@ -266,16 +261,13 @@ void CAttributes::setAttribute(const c8* attributeName, bool value)
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute() as bool
 //! or 0 if attribute is not set.
-bool CAttributes::getAttributeAsBool(const c8* attributeName)
+bool CAttributes::getAttributeAsBool(const c8* attributeName, bool defaultNotFound) const
 {
-	bool ret = false;
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		ret = att->getBool();
-
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
-	return ret;
+		return att->getBool();
+	else
+		return defaultNotFound;
 }
 
 //! Sets a attribute as integer value
@@ -294,13 +286,13 @@ void CAttributes::setAttribute(const c8* attributeName, s32 value)
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute() as integer
 //! or 0 if attribute is not set.
-s32 CAttributes::getAttributeAsInt(const c8* attributeName) const
+s32 CAttributes::getAttributeAsInt(const c8* attributeName, irr::s32 defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getInt();
 	else
-		return 0;
+		return defaultNotFound;
 }
 
 //! Sets a attribute as float value
@@ -317,13 +309,13 @@ void CAttributes::setAttribute(const c8* attributeName, f32 value)
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute() as float value
 //! or 0 if attribute is not set.
-f32 CAttributes::getAttributeAsFloat(const c8* attributeName)
+f32 CAttributes::getAttributeAsFloat(const c8* attributeName, irr::f32 defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getFloat();
 
-	return 0.f;
+	return defaultNotFound;
 }
 
 //! Sets a attribute as color
@@ -339,15 +331,13 @@ void CAttributes::setAttribute(const c8* attributeName, video::SColor value)
 //! Gets an attribute as color
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute()
-video::SColor CAttributes::getAttributeAsColor(const c8* attributeName)
+video::SColor CAttributes::getAttributeAsColor(const c8* attributeName, const video::SColor& defaultNotFound) const
 {
-	video::SColor ret(0);
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		ret = att->getColor();
-
-	return ret;
+		return att->getColor();
+	else
+		return defaultNotFound;
 }
 
 //! Sets a attribute as floating point color
@@ -363,17 +353,17 @@ void CAttributes::setAttribute(const c8* attributeName, video::SColorf value)
 //! Gets an attribute as floating point color
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute()
-video::SColorf CAttributes::getAttributeAsColorf(const c8* attributeName)
+video::SColorf CAttributes::getAttributeAsColorf(const c8* attributeName, const video::SColorf& defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getColorf();
 	else
-		return video::SColorf();
+		return defaultNotFound;
 }
 
 //! Sets a attribute as 2d position
-void CAttributes::setAttribute(const c8* attributeName, core::position2di value)
+void CAttributes::setAttribute(const c8* attributeName, const core::position2di& value)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -385,17 +375,17 @@ void CAttributes::setAttribute(const c8* attributeName, core::position2di value)
 //! Gets an attribute as 2d position
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute()
-core::position2di CAttributes::getAttributeAsPosition2d(const c8* attributeName)
+core::position2di CAttributes::getAttributeAsPosition2d(const c8* attributeName, const core::position2di& defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getPosition();
 	else
-		return core::position2di();
+		return defaultNotFound;
 }
 
 //! Sets a attribute as rectangle
-void CAttributes::setAttribute(const c8* attributeName, core::rect<s32> value)
+void CAttributes::setAttribute(const c8* attributeName, const core::rect<s32>& value)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -407,17 +397,17 @@ void CAttributes::setAttribute(const c8* attributeName, core::rect<s32> value)
 //! Gets an attribute as rectangle
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute()
-core::rect<s32> CAttributes::getAttributeAsRect(const c8* attributeName)
+core::rect<s32> CAttributes::getAttributeAsRect(const c8* attributeName, const core::rect<s32>& defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getRect();
 	else
-		return core::rect<s32>();
+		return defaultNotFound;
 }
 
 //! Sets a attribute as dimension2d
-void CAttributes::setAttribute(const c8* attributeName, core::dimension2d<u32> value)
+void CAttributes::setAttribute(const c8* attributeName, const core::dimension2d<u32>& value)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -429,17 +419,17 @@ void CAttributes::setAttribute(const c8* attributeName, core::dimension2d<u32> v
 //! Gets an attribute as dimension2d
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute()
-core::dimension2d<u32> CAttributes::getAttributeAsDimension2d(const c8* attributeName)
+core::dimension2d<u32> CAttributes::getAttributeAsDimension2d(const c8* attributeName, const core::dimension2d<u32>& defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getDimension2d();
 	else
-		return core::dimension2d<u32>();
+		return defaultNotFound;
 }
 
 //! Sets a attribute as vector
-void CAttributes::setAttribute(const c8* attributeName, core::vector3df value)
+void CAttributes::setAttribute(const c8* attributeName, const core::vector3df& value)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -449,7 +439,7 @@ void CAttributes::setAttribute(const c8* attributeName, core::vector3df value)
 }
 
 //! Sets a attribute as vector
-void CAttributes::setAttribute(const c8* attributeName, core::vector2df value)
+void CAttributes::setAttribute(const c8* attributeName, const core::vector2df& value)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -461,23 +451,23 @@ void CAttributes::setAttribute(const c8* attributeName, core::vector2df value)
 //! Gets an attribute as vector
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute()
-core::vector3df CAttributes::getAttributeAsVector3d(const c8* attributeName)
+core::vector3df CAttributes::getAttributeAsVector3d(const c8* attributeName, const core::vector3df& defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getVector();
 	else
-		return core::vector3df();
+		return defaultNotFound;
 }
 
 //! Gets an attribute as vector
-core::vector2df CAttributes::getAttributeAsVector2d(const c8* attributeName)
+core::vector2df CAttributes::getAttributeAsVector2d(const c8* attributeName, const core::vector2df& defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getVector2d();
 	else
-		return core::vector2df();
+		return defaultNotFound;
 }
 
 //! Sets an attribute as binary data
@@ -492,9 +482,9 @@ void CAttributes::setAttribute(const c8* attributeName, void* data, s32 dataSize
 
 //! Gets an attribute as binary data
 //! \param attributeName: Name of the attribute to get.
-void CAttributes::getAttributeAsBinaryData(const c8* attributeName, void* outData, s32 maxSizeInBytes)
+void CAttributes::getAttributeAsBinaryData(const c8* attributeName, void* outData, s32 maxSizeInBytes) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		att->getBinary(outData, maxSizeInBytes);
 }
@@ -512,19 +502,19 @@ void CAttributes::setAttribute(const c8* attributeName, const char* enumValue, c
 //! Gets an attribute as enumeration
 //! \param attributeName: Name of the attribute to get.
 //! \return Returns value of the attribute previously set by setAttribute()
-const char* CAttributes::getAttributeAsEnumeration(const c8* attributeName)
+const char* CAttributes::getAttributeAsEnumeration(const c8* attributeName, const c8* defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getEnum();
 	else
-		return 0;
+		return defaultNotFound;
 }
 
 //! Gets an attribute as enumeration
-s32 CAttributes::getAttributeAsEnumeration(const c8* attributeName, const char* const* enumerationLiteralsToUse)
+s32 CAttributes::getAttributeAsEnumeration(const c8* attributeName, const char* const* enumerationLiteralsToUse, s32 defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 
 	if (enumerationLiteralsToUse && att)
 	{
@@ -537,17 +527,17 @@ s32 CAttributes::getAttributeAsEnumeration(const c8* attributeName, const char* 
 		}
 	}
 
-	return -1;
+	return defaultNotFound;
 }
 
 //! Gets the list of enumeration literals of an enumeration attribute
 //! \param attributeName: Name of the attribute to get.
-void CAttributes::getAttributeEnumerationLiteralsOfEnumeration(const c8* attributeName, core::array<core::stringc>& outLiterals)
+void CAttributes::getAttributeEnumerationLiteralsOfEnumeration(const c8* attributeName, core::array<core::stringc>& outLiterals) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 
 	if (att && att->getType() == EAT_ENUM)
-		outLiterals = ((CEnumAttribute*)att)->EnumLiterals;
+		outLiterals = ((const CEnumAttribute*)att)->EnumLiterals;
 }
 
 //! Sets an attribute as texture reference
@@ -563,23 +553,23 @@ void CAttributes::setAttribute(const c8* attributeName, video::ITexture* value, 
 
 //! Gets an attribute as texture reference
 //! \param attributeName: Name of the attribute to get.
-video::ITexture* CAttributes::getAttributeAsTexture(const c8* attributeName)
+video::ITexture* CAttributes::getAttributeAsTexture(const c8* attributeName, video::ITexture* defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getTexture();
 	else
-		return 0;
+		return defaultNotFound;
 }
 
 //! Gets an attribute as texture reference
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-video::ITexture* CAttributes::getAttributeAsTexture(s32 index)
+video::ITexture* CAttributes::getAttributeAsTexture(s32 index, video::ITexture* defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getTexture();
 	else
-		return 0;
+		return defaultNotFound;
 }
 
 
@@ -591,7 +581,7 @@ u32 CAttributes::getAttributeCount() const
 
 //! Returns string attribute name by index.
 //! \param index: Index value, must be between 0 and getStringAttributeCount()-1.
-const c8* CAttributes::getAttributeName(s32 index)
+const c8* CAttributes::getAttributeName(s32 index) const
 {
 	if ((u32)index >= Attributes.size())
 		return 0;
@@ -600,11 +590,11 @@ const c8* CAttributes::getAttributeName(s32 index)
 }
 
 //! Returns the type of an attribute
-E_ATTRIBUTE_TYPE CAttributes::getAttributeType(const c8* attributeName)
+E_ATTRIBUTE_TYPE CAttributes::getAttributeType(const c8* attributeName) const
 {
 	E_ATTRIBUTE_TYPE ret = EAT_UNKNOWN;
 
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		ret = att->getType();
 
@@ -613,7 +603,7 @@ E_ATTRIBUTE_TYPE CAttributes::getAttributeType(const c8* attributeName)
 
 //! Returns attribute type by index.
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-E_ATTRIBUTE_TYPE CAttributes::getAttributeType(s32 index)
+E_ATTRIBUTE_TYPE CAttributes::getAttributeType(s32 index) const
 {
 	if ((u32)index >= Attributes.size())
 		return EAT_UNKNOWN;
@@ -622,133 +612,128 @@ E_ATTRIBUTE_TYPE CAttributes::getAttributeType(s32 index)
 }
 
 //! Returns the type of an attribute
-const wchar_t* CAttributes::getAttributeTypeString(const c8* attributeName)
+const wchar_t* CAttributes::getAttributeTypeString(const c8* attributeName, const wchar_t* defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getTypeString();
 	else
-		return L"unknown";
+		return defaultNotFound;
 }
 
 //! Returns attribute type string by index.
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-const wchar_t* CAttributes::getAttributeTypeString(s32 index)
+const wchar_t* CAttributes::getAttributeTypeString(s32 index, const wchar_t* defaultNotFound) const
 {
 	if ((u32)index >= Attributes.size())
-		return L"unknown";
+		return defaultNotFound;
 
 	return Attributes[index]->getTypeString();
 }
 
 //! Gets an attribute as boolean value
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-bool CAttributes::getAttributeAsBool(s32 index)
+bool CAttributes::getAttributeAsBool(s32 index, bool defaultNotFound) const
 {
-	bool ret = false;
-
 	if ((u32)index < Attributes.size())
-		ret = Attributes[index]->getBool();
+		return Attributes[index]->getBool();
 
-	_IRR_IMPLEMENT_MANAGED_MARSHALLING_BUGFIX;
-	return ret;
+	return defaultNotFound;
 }
 
 //! Gets an attribute as integer value
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-s32 CAttributes::getAttributeAsInt(s32 index) const
+s32 CAttributes::getAttributeAsInt(s32 index, irr::s32 defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getInt();
-	else
-		return 0;
+
+	return defaultNotFound;
 }
 
 //! Gets an attribute as float value
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-f32 CAttributes::getAttributeAsFloat(s32 index)
+f32 CAttributes::getAttributeAsFloat(s32 index, irr::f32 defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getFloat();
-	else
-		return 0.f;
+
+	return defaultNotFound;
 }
 
 //! Gets an attribute as color
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-video::SColor CAttributes::getAttributeAsColor(s32 index)
+video::SColor CAttributes::getAttributeAsColor(s32 index, const video::SColor& defaultNotFound) const
 {
-	video::SColor ret(0);
-
 	if ((u32)index < Attributes.size())
-		ret = Attributes[index]->getColor();
+		return Attributes[index]->getColor();
 
-	return ret;
+	return defaultNotFound;
 }
 
 //! Gets an attribute as floating point color
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-video::SColorf CAttributes::getAttributeAsColorf(s32 index)
+video::SColorf CAttributes::getAttributeAsColorf(s32 index, const video::SColorf& defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getColorf();
 
-	return video::SColorf();
+	return defaultNotFound;
 }
 
 //! Gets an attribute as 3d vector
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-core::vector3df CAttributes::getAttributeAsVector3d(s32 index)
+core::vector3df CAttributes::getAttributeAsVector3d(s32 index, const core::vector3df& defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getVector();
-	else
-		return core::vector3df();
+
+	return defaultNotFound;
 }
 
 //! Gets an attribute as 2d vector
-core::vector2df CAttributes::getAttributeAsVector2d(s32 index)
+core::vector2df CAttributes::getAttributeAsVector2d(s32 index, const core::vector2df& defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getVector2d();
-	else
-		return core::vector2df();
+
+	return defaultNotFound;
 }
 
 //! Gets an attribute as position2d
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-core::position2di CAttributes::getAttributeAsPosition2d(s32 index)
+core::position2di CAttributes::getAttributeAsPosition2d(s32 index, const core::position2di& defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getPosition();
-	else
-		return core::position2di();
+
+	return defaultNotFound;
 }
 
 //! Gets an attribute as rectangle
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-core::rect<s32>  CAttributes::getAttributeAsRect(s32 index)
+core::rect<s32> CAttributes::getAttributeAsRect(s32 index, const core::rect<s32>& defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getRect();
-	else
-		return core::rect<s32>();
+
+	return defaultNotFound;
 }
 
 //! Gets an attribute as dimension2d
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-core::dimension2d<u32>  CAttributes::getAttributeAsDimension2d(s32 index)
+core::dimension2d<u32>  CAttributes::getAttributeAsDimension2d(s32 index, const core::dimension2d<u32>& defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getDimension2d();
-	else
-		return core::dimension2d<u32>();
+
+	return defaultNotFound;
 }
 
 
 //! Gets an attribute as binary data
 ///! \param index: Index value, must be between 0 and getAttributeCount()-1.
-void CAttributes::getAttributeAsBinaryData(s32 index, void* outData, s32 maxSizeInBytes)
+void CAttributes::getAttributeAsBinaryData(s32 index, void* outData, s32 maxSizeInBytes) const
 {
 	if ((u32)index < Attributes.size())
 		Attributes[index]->getBinary(outData, maxSizeInBytes);
@@ -757,7 +742,7 @@ void CAttributes::getAttributeAsBinaryData(s32 index, void* outData, s32 maxSize
 
 //! Gets an attribute as enumeration
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-const char* CAttributes::getAttributeAsEnumeration(s32 index)
+const char* CAttributes::getAttributeAsEnumeration(s32 index) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getEnum();
@@ -768,11 +753,11 @@ const char* CAttributes::getAttributeAsEnumeration(s32 index)
 
 //! Gets an attribute as enumeration
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-s32 CAttributes::getAttributeAsEnumeration(s32 index, const char* const* enumerationLiteralsToUse)
+s32 CAttributes::getAttributeAsEnumeration(s32 index, const char* const* enumerationLiteralsToUse, s32 defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 	{
-		IAttribute* att = Attributes[index];
+		const IAttribute* att = Attributes[index];
 
 		if (enumerationLiteralsToUse && att)
 		{
@@ -786,12 +771,12 @@ s32 CAttributes::getAttributeAsEnumeration(s32 index, const char* const* enumera
 		}
 	}
 
-	return -1;
+	return defaultNotFound;
 }
 
 //! Gets the list of enumeration literals of an enumeration attribute
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-void CAttributes::getAttributeEnumerationLiteralsOfEnumeration(s32 index, core::array<core::stringc>& outLiterals)
+void CAttributes::getAttributeEnumerationLiteralsOfEnumeration(s32 index, core::array<core::stringc>& outLiterals) const
 {
 	if ((u32)index < Attributes.size() &&
 			Attributes[index]->getType() == EAT_ENUM)
@@ -855,32 +840,32 @@ void CAttributes::addColorf(const c8* attributeName, video::SColorf value)
 }
 
 //! Adds an attribute as 3d vector
-void CAttributes::addVector3d(const c8* attributeName, core::vector3df value)
+void CAttributes::addVector3d(const c8* attributeName, const core::vector3df& value)
 {
 	Attributes.push_back(new CVector3DAttribute(attributeName, value));
 }
 
 //! Adds an attribute as 2d vector
-void CAttributes::addVector2d(const c8* attributeName, core::vector2df value)
+void CAttributes::addVector2d(const c8* attributeName, const core::vector2df& value)
 {
 	Attributes.push_back(new CVector2DAttribute(attributeName, value));
 }
 
 
 //! Adds an attribute as 2d position
-void CAttributes::addPosition2d(const c8* attributeName, core::position2di value)
+void CAttributes::addPosition2d(const c8* attributeName, const core::position2di& value)
 {
 	Attributes.push_back(new CPosition2DAttribute(attributeName, value));
 }
 
 //! Adds an attribute as rectangle
-void CAttributes::addRect(const c8* attributeName, core::rect<s32> value)
+void CAttributes::addRect(const c8* attributeName, const core::rect<s32>& value)
 {
 	Attributes.push_back(new CRectAttribute(attributeName, value));
 }
 
 //! Adds an attribute as dimension2d
-void CAttributes::addDimension2d(const c8* attributeName, core::dimension2d<u32> value)
+void CAttributes::addDimension2d(const c8* attributeName, const core::dimension2d<u32>& value)
 {
 	Attributes.push_back(new CDimension2dAttribute(attributeName, value));
 }
@@ -898,7 +883,7 @@ void CAttributes::addTexture(const c8* attributeName, video::ITexture* texture, 
 }
 
 //! Returns if an attribute with a name exists
-bool CAttributes::existsAttribute(const c8* attributeName)
+bool CAttributes::existsAttribute(const c8* attributeName) const
 {
 	return getAttributeP(attributeName) != 0;
 }
@@ -955,35 +940,35 @@ void CAttributes::setAttribute(s32 index, video::SColorf color)
 }
 
 //! Sets a attribute as vector
-void CAttributes::setAttribute(s32 index, core::vector3df v)
+void CAttributes::setAttribute(s32 index, const core::vector3df& v)
 {
 	if ((u32)index < Attributes.size())
 		Attributes[index]->setVector(v);
 }
 
 //! Sets a attribute as vector
-void CAttributes::setAttribute(s32 index, core::vector2df v)
+void CAttributes::setAttribute(s32 index, const core::vector2df& v)
 {
 	if ((u32)index < Attributes.size())
 		Attributes[index]->setVector2d(v);
 }
 
 //! Sets a attribute as position
-void CAttributes::setAttribute(s32 index, core::position2di v)
+void CAttributes::setAttribute(s32 index, const core::position2di& v)
 {
 	if ((u32)index < Attributes.size())
 		Attributes[index]->setPosition(v);
 }
 
 //! Sets a attribute as rectangle
-void CAttributes::setAttribute(s32 index, core::rect<s32> v)
+void CAttributes::setAttribute(s32 index, const core::rect<s32>& v)
 {
 	if ((u32)index < Attributes.size())
 		Attributes[index]->setRect(v);
 }
 
 //! Sets a attribute as dimension2d
-void CAttributes::setAttribute(s32 index, core::dimension2d<u32> v)
+void CAttributes::setAttribute(s32 index, const core::dimension2d<u32>& v)
 {
 	if ((u32)index < Attributes.size())
 		Attributes[index]->setDimension2d(v);
@@ -1031,23 +1016,23 @@ void CAttributes::setAttribute(const c8* attributeName, const core::matrix4& v)
 }
 
 //! Gets an attribute as a matrix4
-core::matrix4 CAttributes::getAttributeAsMatrix(const c8* attributeName)
+core::matrix4 CAttributes::getAttributeAsMatrix(const c8* attributeName, const core::matrix4& defaultNotFound) const
 {
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
 		return att->getMatrix();
 	else
-		return core::matrix4();
+		return defaultNotFound;
 
 }
 
 //! Gets an attribute as matrix
-core::matrix4 CAttributes::getAttributeAsMatrix(s32 index)
+core::matrix4 CAttributes::getAttributeAsMatrix(s32 index, const core::matrix4& defaultNotFound) const
 {
 	if ((u32)index < Attributes.size())
 		return Attributes[index]->getMatrix();
-	else
-		return core::matrix4();
+
+	return defaultNotFound;
 }
 
 //! Sets an attribute as matrix
@@ -1059,14 +1044,14 @@ void CAttributes::setAttribute(s32 index, const core::matrix4& v)
 
 
 //! Adds an attribute as quaternion
-void CAttributes::addQuaternion(const c8* attributeName, core::quaternion v)
+void CAttributes::addQuaternion(const c8* attributeName, const core::quaternion& v)
 {
 	Attributes.push_back(new CQuaternionAttribute(attributeName, v));
 }
 
 
 //! Sets an attribute as quaternion
-void CAttributes::setAttribute(const c8* attributeName, core::quaternion v)
+void CAttributes::setAttribute(const c8* attributeName, const core::quaternion& v)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -1078,43 +1063,39 @@ void CAttributes::setAttribute(const c8* attributeName, core::quaternion v)
 }
 
 //! Gets an attribute as a quaternion
-core::quaternion CAttributes::getAttributeAsQuaternion(const c8* attributeName)
+core::quaternion CAttributes::getAttributeAsQuaternion(const c8* attributeName, const core::quaternion& defaultNotFound) const
 {
-	core::quaternion ret(0,1,0, 0);
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		ret = att->getQuaternion();
-
-	return ret;
+		return att->getQuaternion();
+	else
+		return defaultNotFound;
 }
 
 //! Gets an attribute as quaternion
-core::quaternion CAttributes::getAttributeAsQuaternion(s32 index)
+core::quaternion CAttributes::getAttributeAsQuaternion(s32 index, const core::quaternion& defaultNotFound) const
 {
-	core::quaternion ret(0,1,0, 0);
-
 	if (index >= 0 && index < (s32)Attributes.size())
-		ret = Attributes[index]->getQuaternion();
+		return Attributes[index]->getQuaternion();
 
-	return ret;
+	return defaultNotFound;
 }
 
 //! Sets an attribute as quaternion
-void CAttributes::setAttribute(s32 index, core::quaternion v)
+void CAttributes::setAttribute(s32 index, const core::quaternion& v)
 {
 if (index >= 0 && index < (s32)Attributes.size() )
 		Attributes[index]->setQuaternion(v);
 }
 
 //! Adds an attribute as axis aligned bounding box
-void CAttributes::addBox3d(const c8* attributeName, core::aabbox3df v)
+void CAttributes::addBox3d(const c8* attributeName, const core::aabbox3df& v)
 {
 	Attributes.push_back(new CBBoxAttribute(attributeName, v));
 }
 
 //! Sets an attribute as axis aligned bounding box
-void CAttributes::setAttribute(const c8* attributeName, core::aabbox3df v)
+void CAttributes::setAttribute(const c8* attributeName, const core::aabbox3df& v)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -1126,43 +1107,39 @@ void CAttributes::setAttribute(const c8* attributeName, core::aabbox3df v)
 }
 
 //! Gets an attribute as a axis aligned bounding box
-core::aabbox3df CAttributes::getAttributeAsBox3d(const c8* attributeName)
+core::aabbox3df CAttributes::getAttributeAsBox3d(const c8* attributeName, const core::aabbox3df& defaultNotFound) const
 {
-	core::aabbox3df ret(0,0,0, 0,0,0);
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		ret = att->getBBox();
-
-	return ret;
+		return att->getBBox();
+	else
+		return defaultNotFound;
 }
 
 //! Gets an attribute as axis aligned bounding box
-core::aabbox3df CAttributes::getAttributeAsBox3d(s32 index)
+core::aabbox3df CAttributes::getAttributeAsBox3d(s32 index, const core::aabbox3df& defaultNotFound) const
 {
-	core::aabbox3df ret(0,0,0, 0,0,0);
-
 	if (index >= 0 && index < (s32)Attributes.size())
-		ret = Attributes[index]->getBBox();
+		return Attributes[index]->getBBox();
 
-	return ret;
+	return defaultNotFound;
 }
 
 //! Sets an attribute as axis aligned bounding box
-void CAttributes::setAttribute(s32 index, core::aabbox3df v)
+void CAttributes::setAttribute(s32 index, const core::aabbox3df& v)
 {
 if (index >= 0 && index < (s32)Attributes.size() )
 		Attributes[index]->setBBox(v);
 }
 
 //! Adds an attribute as 3d plane
-void CAttributes::addPlane3d(const c8* attributeName, core::plane3df v)
+void CAttributes::addPlane3d(const c8* attributeName, const core::plane3df& v)
 {
 	Attributes.push_back(new CPlaneAttribute(attributeName, v));
 }
 
 //! Sets an attribute as 3d plane
-void CAttributes::setAttribute(const c8* attributeName, core::plane3df v)
+void CAttributes::setAttribute(const c8* attributeName, const core::plane3df& v)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -1174,43 +1151,39 @@ void CAttributes::setAttribute(const c8* attributeName, core::plane3df v)
 }
 
 //! Gets an attribute as a 3d plane
-core::plane3df CAttributes::getAttributeAsPlane3d(const c8* attributeName)
+core::plane3df CAttributes::getAttributeAsPlane3d(const c8* attributeName, const core::plane3df& defaultNotFound) const
 {
-	core::plane3df ret(0,0,0, 0,1,0);
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		ret = att->getPlane();
-
-	return ret;
+		return att->getPlane();
+	else
+		return defaultNotFound;
 }
 
 //! Gets an attribute as 3d plane
-core::plane3df CAttributes::getAttributeAsPlane3d(s32 index)
+core::plane3df CAttributes::getAttributeAsPlane3d(s32 index, const core::plane3df& defaultNotFound) const
 {
-	core::plane3df ret(0,0,0, 0,1,0);
-
 	if (index >= 0 && index < (s32)Attributes.size())
-		ret = Attributes[index]->getPlane();
+		return Attributes[index]->getPlane();
 
-	return ret;
+	return defaultNotFound;
 }
 
 //! Sets an attribute as 3d plane
-void CAttributes::setAttribute(s32 index, core::plane3df v)
+void CAttributes::setAttribute(s32 index, const core::plane3df& v)
 {
 	if (index >= 0 && index < (s32)Attributes.size() )
 		Attributes[index]->setPlane(v);
 }
 
 //! Adds an attribute as 3d triangle
-void CAttributes::addTriangle3d(const c8* attributeName, core::triangle3df v)
+void CAttributes::addTriangle3d(const c8* attributeName, const core::triangle3df& v)
 {
 	Attributes.push_back(new CTriangleAttribute(attributeName, v));
 }
 
 //! Sets an attribute as 3d triangle
-void CAttributes::setAttribute(const c8* attributeName, core::triangle3df v)
+void CAttributes::setAttribute(const c8* attributeName, const core::triangle3df& v)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -1222,45 +1195,39 @@ void CAttributes::setAttribute(const c8* attributeName, core::triangle3df v)
 }
 
 //! Gets an attribute as a 3d triangle
-core::triangle3df CAttributes::getAttributeAsTriangle3d(const c8* attributeName)
+core::triangle3df CAttributes::getAttributeAsTriangle3d(const c8* attributeName, const core::triangle3df& defaultNotFound) const
 {
-	core::triangle3df ret;
-	ret.pointA = ret.pointB = ret.pointC = core::vector3df(0,0,0);
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		ret = att->getTriangle();
-
-	return ret;
+		return att->getTriangle();
+	else
+		return defaultNotFound;
 }
 
 //! Gets an attribute as 3d triangle
-core::triangle3df CAttributes::getAttributeAsTriangle3d(s32 index)
+core::triangle3df CAttributes::getAttributeAsTriangle3d(s32 index, const core::triangle3df& defaultNotFound) const
 {
-	core::triangle3df ret;
-	ret.pointA = ret.pointB = ret.pointC = core::vector3df(0,0,0);
-
 	if (index >= 0 && index < (s32)Attributes.size())
-		ret = Attributes[index]->getTriangle();
+		return Attributes[index]->getTriangle();
 
-	return ret;
+	return defaultNotFound;
 }
 
 //! Sets an attribute as 3d triangle
-void CAttributes::setAttribute(s32 index, core::triangle3df v)
+void CAttributes::setAttribute(s32 index, const core::triangle3df& v)
 {
 	if (index >= 0 && index < (s32)Attributes.size() )
 		Attributes[index]->setTriangle(v);
 }
 
 //! Adds an attribute as a 2d line
-void CAttributes::addLine2d(const c8* attributeName, core::line2df v)
+void CAttributes::addLine2d(const c8* attributeName, const core::line2df& v)
 {
 	Attributes.push_back(new CLine2dAttribute(attributeName, v));
 }
 
 //! Sets an attribute as a 2d line
-void CAttributes::setAttribute(const c8* attributeName, core::line2df v)
+void CAttributes::setAttribute(const c8* attributeName, const core::line2df& v)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -1272,43 +1239,39 @@ void CAttributes::setAttribute(const c8* attributeName, core::line2df v)
 }
 
 //! Gets an attribute as a 2d line
-core::line2df CAttributes::getAttributeAsLine2d(const c8* attributeName)
+core::line2df CAttributes::getAttributeAsLine2d(const c8* attributeName, const core::line2df& defaultNotFound) const
 {
-	core::line2df ret(0,0, 0,0);
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		ret = att->getLine2d();
-
-	return ret;
+		return att->getLine2d();
+	else
+		return defaultNotFound;
 }
 
 //! Gets an attribute as a 2d line
-core::line2df CAttributes::getAttributeAsLine2d(s32 index)
+core::line2df CAttributes::getAttributeAsLine2d(s32 index, const core::line2df& defaultNotFound) const
 {
-	core::line2df ret(0,0, 0,0);
-
 	if (index >= 0 && index < (s32)Attributes.size())
-		ret = Attributes[index]->getLine2d();
+		return Attributes[index]->getLine2d();
 
-	return ret;
+	return defaultNotFound;
 }
 
 //! Sets an attribute as a 2d line
-void CAttributes::setAttribute(s32 index, core::line2df v)
+void CAttributes::setAttribute(s32 index, const core::line2df& v)
 {
 	if (index >= 0 && index < (s32)Attributes.size() )
 		Attributes[index]->setLine2d(v);
 }
 
 //! Adds an attribute as a 3d line
-void CAttributes::addLine3d(const c8* attributeName, core::line3df v)
+void CAttributes::addLine3d(const c8* attributeName, const core::line3df& v)
 {
 	Attributes.push_back(new CLine3dAttribute(attributeName, v));
 }
 
 //! Sets an attribute as a 3d line
-void CAttributes::setAttribute(const c8* attributeName, core::line3df v)
+void CAttributes::setAttribute(const c8* attributeName, const core::line3df& v)
 {
 	IAttribute* att = getAttributeP(attributeName);
 	if (att)
@@ -1320,30 +1283,26 @@ void CAttributes::setAttribute(const c8* attributeName, core::line3df v)
 }
 
 //! Gets an attribute as a 3d line
-core::line3df CAttributes::getAttributeAsLine3d(const c8* attributeName)
+core::line3df CAttributes::getAttributeAsLine3d(const c8* attributeName, const core::line3df& defaultNotFound) const
 {
-	core::line3df ret(0,0,0, 0,0,0);
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		ret = att->getLine3d();
-
-	return ret;
+		return att->getLine3d();
+	else
+		return defaultNotFound;
 }
 
 //! Gets an attribute as a 3d line
-core::line3df CAttributes::getAttributeAsLine3d(s32 index)
+core::line3df CAttributes::getAttributeAsLine3d(s32 index, const core::line3df& defaultNotFound) const
 {
-	core::line3df ret(0,0,0, 0,0,0);
-
 	if (index >= 0 && index < (s32)Attributes.size())
-		ret = Attributes[index]->getLine3d();
+		return Attributes[index]->getLine3d();
 
-	return ret;
+	return defaultNotFound;
 }
 
 //! Sets an attribute as a 3d line
-void CAttributes::setAttribute(s32 index, core::line3df v)
+void CAttributes::setAttribute(s32 index, const core::line3df& v)
 {
 	if (index >= 0 && index < (s32)Attributes.size() )
 		Attributes[index]->setLine3d(v);
@@ -1351,7 +1310,7 @@ void CAttributes::setAttribute(s32 index, core::line3df v)
 }
 
 
-//! Adds an attribute as user pointner
+//! Adds an attribute as user pointer
 void CAttributes::addUserPointer(const c8* attributeName, void* userPointer)
 {
 	Attributes.push_back(new CUserPointerAttribute(attributeName, userPointer));
@@ -1371,27 +1330,23 @@ void CAttributes::setAttribute(const c8* attributeName, void* userPointer)
 
 //! Gets an attribute as user pointer
 //! \param attributeName: Name of the attribute to get.
-void* CAttributes::getAttributeAsUserPointer(const c8* attributeName)
+void* CAttributes::getAttributeAsUserPointer(const c8* attributeName, void* defaultNotFound) const
 {
-	void* value = 0;
-
-	IAttribute* att = getAttributeP(attributeName);
+	const IAttribute* att = getAttributeP(attributeName);
 	if (att)
-		value = att->getUserPointer();
-
-	return value;
+		return att->getUserPointer();
+	else
+		return defaultNotFound;
 }
 
 //! Gets an attribute as user pointer
 //! \param index: Index value, must be between 0 and getAttributeCount()-1.
-void* CAttributes::getAttributeAsUserPointer(s32 index)
+void* CAttributes::getAttributeAsUserPointer(s32 index, void* defaultNotFound) const
 {
-	void* value = 0;
-
 	if (index >= 0 && index < (s32)Attributes.size())
-        value = Attributes[index]->getUserPointer();
+        return Attributes[index]->getUserPointer();
 
-	return value;
+	return defaultNotFound;
 }
 
 //! Sets an attribute as user pointer
@@ -1408,6 +1363,7 @@ void CAttributes::setAttribute(s32 index, void* userPointer)
 bool CAttributes::read(io::IXMLReader* reader, bool readCurrentElementOnly,
 					    const wchar_t* nonDefaultElementName)
 {
+#ifdef _IRR_COMPILE_WITH_XML_
 	if (!reader)
 		return false;
 
@@ -1440,11 +1396,16 @@ bool CAttributes::read(io::IXMLReader* reader, bool readCurrentElementOnly,
 	}
 
 	return true;
+#else
+	noXML();
+	return false;
+#endif
 }
 
 
-void CAttributes::readAttributeFromXML(io::IXMLReader* reader)
+void CAttributes::readAttributeFromXML(const io::IXMLReader* reader)
 {
+#ifdef _IRR_COMPILE_WITH_XML_
 	core::stringw element = reader->getNodeName();
 	core::stringc name = reader->getAttributeValue(L"name");
 
@@ -1572,7 +1533,7 @@ void CAttributes::readAttributeFromXML(io::IXMLReader* reader)
 	{
 		core::array<core::stringw> tmpArray;
 
-		s32 count = reader->getAttributeValueAsInt(L"count");
+		const s32 count = reader->getAttributeValueAsInt(L"count");
 		s32 n=0;
 		const core::stringw tmpName(L"value");
 		for (; n<count; ++n)
@@ -1593,12 +1554,16 @@ void CAttributes::readAttributeFromXML(io::IXMLReader* reader)
 		addDimension2d(name.c_str(), core::dimension2d<u32>());
 		Attributes.getLast()->setString(reader->getAttributeValue(L"value"));
 	}
+#else
+	noXML();
+#endif
 }
 
 //! Write these attributes into a xml file
 bool CAttributes::write(io::IXMLWriter* writer, bool writeXMLHeader,
 						const wchar_t* nonDefaultElementName)
 {
+#ifdef _IRR_COMPILE_WITH_XML_
 	if (!writer)
 		return false;
 
@@ -1657,6 +1622,10 @@ bool CAttributes::write(io::IXMLWriter* writer, bool writeXMLHeader,
 	writer->writeLineBreak();
 
 	return true;
+#else
+	noXML();
+	return false;
+#endif
 }
 
 

@@ -20,7 +20,7 @@ jobs:
           tar xf tools.tar.xz
           mv -f linux-musl-tools /opt/
           rm -rf tools.tar.xz
-      
+
       - name: Download Data
         run: |
           wget -O ygopro.zip https://github.com/purerosefallen/ygopro/archive/refs/heads/server.zip
@@ -34,11 +34,17 @@ jobs:
           mkdir -p ygopro
           mkdir -p ygopro-bin
           mv -f ygopro-server/gframe ygopro/
+          mv -f ygopro-server/cards.cdb ygopro/
           mv -f ygopro-server/lflist.conf ygopro/
           mv -f ygopro-server/strings.conf ygopro/
+          mv -f ygopro-server/premake5.lua ygopro/
           mv -f ygopro-core-master ocgcore
           mv -f ygopro-scripts-master script
           mv -f srvpro-master srvpro
+          wget -O - https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.gz | tar zfx -
+          wget -O - https://github.com/tukaani-project/xz/releases/download/v5.8.3/xz-5.8.3.tar.gz | tar zfx -
+          mv -f zlib-1.3.2/* dep/zlib/
+          mv -f xz-5.8.3/* dep/lzma/
           rm -rf ygopro-server ygopro.zip ocgcore.zip script.zip srvpro.zip
 
       - name: Build Ygopro Init
@@ -48,8 +54,10 @@ jobs:
           mv -f ocgcore ygopro/
           mv -f script ygopro/
           cd ygopro/
-          premake5 gmake --build-lua --build-event --build-sqlite --server-zip-support
-      
+          sed -i 's/^[[:space:]]*architecture[[:space:]]*"x86_64"/-- &/' premake5.lua
+          echo 'linkoptions { "-static" }' >> gframe/premake5.lua
+          premake5 gmake --build-lua --build-event --build-sqlite --build-lzma --build-zlib --server-zip-support
+
       - name: Build Ygopro amd64
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
@@ -63,7 +71,7 @@ jobs:
           rm -rf ../bin/ ../obj/
           make config=release -j$(grep -c "processor" /proc/cpuinfo)
           mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-amd64
-      
+
       - name: Build Ygopro arm64
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
@@ -77,7 +85,7 @@ jobs:
           rm -rf ../bin/ ../obj/
           make config=release -j$(grep -c "processor" /proc/cpuinfo)
           mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm64
-      
+
       - name: Build Ygopro arm
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
@@ -91,7 +99,7 @@ jobs:
           rm -rf ../bin/ ../obj/
           make config=release -j$(grep -c "processor" /proc/cpuinfo)
           mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm
-      
+
       - name: Build WindBot
         run: |
           sudo apt install mono-devel -y
@@ -101,7 +109,7 @@ jobs:
           xbuild /property:Configuration=Release /property:TargetFrameworkVersion="v4.6"
           mv -f bin/Release ../windbot
           cd .. && rm -rf windbot.zip windbot-master
-      
+
       - name: Organize Data
         run: |
           export PATH=$PATH:/opt/linux-musl-tools/bin
@@ -114,14 +122,7 @@ jobs:
           mv -f windbot srvpro/ && mv -f ygopro srvpro/
           cd srvpro/ygopro/
           rm -rf bin obj build event lua sqlite3 ocgcore
-          wget -O cards.cdb https://github.com/mycard/ygopro-database/raw/refs/heads/master/locales/zh-CN/cards.cdb
-          ls gframe | sed '/game.cpp/d' | xargs -I {} rm -rf gframe/{}
-      
-      #
-      #- name: Test Data
-      #  run: |
-      #    wget -O data.zip https://github.com/Unicorn369/ygoserver/releases/download/v0.0.1/data.zip
-      #    unzip -o -qq data.zip
+          ls gframe | sed '/config.h/d' | xargs -I {} rm -rf gframe/{}
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3

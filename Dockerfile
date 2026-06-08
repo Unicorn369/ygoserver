@@ -1,32 +1,30 @@
-FROM node:lts-alpine AS builder
+FROM node:lts-alpine3.20 AS builder
 ARG SRVPRO_PATH
-RUN mkdir -p /ygoserver
-COPY ${SRVPRO_PATH}/package*.json /ygoserver/
+COPY ${SRVPRO_PATH} /ygoserver 
 
 WORKDIR /ygoserver
 RUN apk add --no-cache python3 make g++
 RUN npm install
+RUN npm install --prefix /opt/local -g pm2
 
 ###############
-FROM node:lts-alpine
+FROM node:lts-alpine3.20
 ARG TARGETARCH
 ARG SRVPRO_PATH
 ARG YGOPRO_PATH
 ARG INIT_FILE_PATH
 
-COPY ${SRVPRO_PATH} /ygoserver
+RUN apk add --no-cache jq patch
+
+COPY --from=builder /ygoserver /ygoserver
+COPY --from=builder /opt/local /usr/
 COPY ${YGOPRO_PATH}/ygopro-${TARGETARCH} /ygoserver/ygopro/ygopro
-COPY ${INIT_FILE_PATH} /init
+COPY ${INIT_FILE_PATH} /run.sh
+
+RUN chmod +x /ygoserver/ygopro/ygopro
+RUN chmod +x /run.sh
 
 WORKDIR /ygoserver
 
-RUN chmod +x /ygoserver/ygopro/ygopro
-RUN chmod +x /init
-
-RUN apk add --no-cache jq
-RUN npm install -g pm2
-
-COPY --from=builder /ygoserver/node_modules ./node_modules
-
-ENTRYPOINT [ "/init" ]
-CMD [ "--default" ]
+ENTRYPOINT [ "/run.sh" ]
+#CMD [ "--ygo-windbot=1" ]
