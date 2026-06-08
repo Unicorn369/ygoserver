@@ -2,8 +2,8 @@
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
-#ifndef __IRR_HEAPSORT_H_INCLUDED__
-#define __IRR_HEAPSORT_H_INCLUDED__
+#ifndef IRR_HEAPSORT_H_INCLUDED
+#define IRR_HEAPSORT_H_INCLUDED
 
 #include "irrTypes.h"
 
@@ -40,23 +40,22 @@ inline void heapsink(T*array, s32 element, s32 max)
 template<class T>
 inline void heapsort(T* array_, s32 size)
 {
-	// for heapsink we pretent this is not c++, where
+	// for heapsink we pretend this is not c++, where
 	// arrays start with index 0. So we decrease the array pointer,
 	// the maximum always +2 and the element always +1
 
 	T* virtualArray = array_ - 1;
-	s32 virtualSize = size + 2;
-	s32 i;
+	const s32 virtualSize = size + 2;
 
 	// build heap
 
-	for (i=((size-1)/2); i>=0; --i)
+	for (s32 i=((size-1)/2); i>=0; --i)
 		heapsink(virtualArray, i+1, virtualSize-1);
 
 	// sort array, leave out the last element (0)
-	for (i=size-1; i>0; --i)
+	for (s32 i=size-1; i>0; --i)
 	{
-		T t = array_[0];
+		const T t = array_[0];
 		array_[0] = array_[i];
 		array_[i] = t;
 		heapsink(virtualArray, 1, i + 1);

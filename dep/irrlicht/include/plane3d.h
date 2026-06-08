@@ -2,8 +2,8 @@
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
-#ifndef __IRR_PLANE_3D_H_INCLUDED__
-#define __IRR_PLANE_3D_H_INCLUDED__
+#ifndef IRR_PLANE_3D_H_INCLUDED
+#define IRR_PLANE_3D_H_INCLUDED
 
 #include "irrMath.h"
 #include "vector3d.h"
@@ -37,14 +37,14 @@ class plane3d
 		// Constructors
 
 		plane3d(): Normal(0,1,0) { recalculateD(vector3d<T>(0,0,0)); }
-		
+
 		plane3d(const vector3d<T>& MPoint, const vector3d<T>& Normal) : Normal(Normal) { recalculateD(MPoint); }
-		
+
 		plane3d(T px, T py, T pz, T nx, T ny, T nz) : Normal(nx, ny, nz) { recalculateD(vector3d<T>(px, py, pz)); }
-		
+
 		plane3d(const vector3d<T>& point1, const vector3d<T>& point2, const vector3d<T>& point3)
 		{ setPlane(point1, point2, point3); }
-		
+
 		plane3d(const vector3d<T> & normal, const T d) : Normal(normal), D(d) { }
 
 		// operators
@@ -107,8 +107,8 @@ class plane3d
 		f32 getKnownIntersectionWithLine(const vector3d<T>& linePoint1,
 			const vector3d<T>& linePoint2) const
 		{
-			vector3d<T> vect = linePoint2 - linePoint1;
-			T t2 = (f32)Normal.dotProduct(vect);
+			const vector3d<T> vect = linePoint2 - linePoint1;
+			const T t2 = (f32)Normal.dotProduct(vect);
 			return (f32)-((Normal.dotProduct(linePoint1) + D) / t2);
 		}
 
@@ -149,6 +149,13 @@ class plane3d
 		void recalculateD(const vector3d<T>& MPoint)
 		{
 			D = - MPoint.dotProduct(Normal);
+		}
+
+		//! Flip plane direction to opposite side
+		void flip()
+		{
+			Normal = -Normal;
+			D = -D;
 		}
 
 		//! Gets a member point of the plane.

@@ -2,8 +2,8 @@
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
-#ifndef __IRR_AABBOX_3D_H_INCLUDED__
-#define __IRR_AABBOX_3D_H_INCLUDED__
+#ifndef IRR_AABBOX_3D_H_INCLUDED
+#define IRR_AABBOX_3D_H_INCLUDED
 
 #include "irrMath.h"
 #include "plane3d.h"
@@ -30,6 +30,8 @@ class aabbox3d
 		aabbox3d(const vector3d<T>& init): MinEdge(init), MaxEdge(init) {}
 		//! Constructor with min edge and max edge as single values, not vectors.
 		aabbox3d(T minx, T miny, T minz, T maxx, T maxy, T maxz): MinEdge(minx, miny, minz), MaxEdge(maxx, maxy, maxz) {}
+		//! Constructor with min and max edge single values and x/y/z identical
+		aabbox3d(T min, T max) : MinEdge(min, min, min), MaxEdge(max, max, max) {}
 
 		// operators
 		//! Equality operator
@@ -115,6 +117,14 @@ class aabbox3d
 			return MaxEdge - MinEdge;
 		}
 
+		//! Get radius of the bounding sphere
+		/** \return Radius of the bounding sphere. */
+		T getRadius() const
+		{
+			const T radius = getExtent().getLength() / 2;
+			return radius;
+		}
+
 		//! Check if the box is empty.
 		/** This means that there is no space between the min and max edge.
 		\return True if box is empty, else false. */
@@ -137,15 +147,15 @@ class aabbox3d
 			return 2*(e.X*e.Y + e.X*e.Z + e.Y*e.Z);
 		}
 
-		//! Stores all 8 edges of the box into an array
-		/** \param edges: Pointer to array of 8 edges. */
-		void getEdges(vector3d<T> *edges) const
+		//! Stores all 8 corners of the box into an array
+		/** \param corners: Pointer to array of 8 corners. */
+		void getEdges(vector3d<T> *corners) const
 		{
 			const core::vector3d<T> middle = getCenter();
 			const core::vector3d<T> diag = middle - MaxEdge;
 
 			/*
-			Edges are stored in this way:
+			Corners are stored in this way:
 			Hey, am I an ascii artist, or what? :) niko.
                    /3--------/7
                   / |       / |
@@ -157,14 +167,41 @@ class aabbox3d
                 0---------4/
 			*/
 
-			edges[0].set(middle.X + diag.X, middle.Y + diag.Y, middle.Z + diag.Z);
-			edges[1].set(middle.X + diag.X, middle.Y - diag.Y, middle.Z + diag.Z);
-			edges[2].set(middle.X + diag.X, middle.Y + diag.Y, middle.Z - diag.Z);
-			edges[3].set(middle.X + diag.X, middle.Y - diag.Y, middle.Z - diag.Z);
-			edges[4].set(middle.X - diag.X, middle.Y + diag.Y, middle.Z + diag.Z);
-			edges[5].set(middle.X - diag.X, middle.Y - diag.Y, middle.Z + diag.Z);
-			edges[6].set(middle.X - diag.X, middle.Y + diag.Y, middle.Z - diag.Z);
-			edges[7].set(middle.X - diag.X, middle.Y - diag.Y, middle.Z - diag.Z);
+			corners[0].set(middle.X + diag.X, middle.Y + diag.Y, middle.Z + diag.Z);
+			corners[1].set(middle.X + diag.X, middle.Y - diag.Y, middle.Z + diag.Z);
+			corners[2].set(middle.X + diag.X, middle.Y + diag.Y, middle.Z - diag.Z);
+			corners[3].set(middle.X + diag.X, middle.Y - diag.Y, middle.Z - diag.Z);
+			corners[4].set(middle.X - diag.X, middle.Y + diag.Y, middle.Z + diag.Z);
+			corners[5].set(middle.X - diag.X, middle.Y - diag.Y, middle.Z + diag.Z);
+			corners[6].set(middle.X - diag.X, middle.Y + diag.Y, middle.Z - diag.Z);
+			corners[7].set(middle.X - diag.X, middle.Y - diag.Y, middle.Z - diag.Z);
+		}
+
+		//! Stores all 6 centers of the box side faces into an array
+		/** \param sideCenters: Pointer to array of 6 corners. */
+		void getSideCenters(vector3d<T> *corners) const
+		{
+			const core::vector3d<T> middle = getCenter();
+
+			corners[0].set(MinEdge.X, middle.Y, middle.Z);
+			corners[1].set(MaxEdge.X, middle.Y, middle.Z);
+			corners[2].set(middle.X, MinEdge.Y, middle.Z);
+			corners[3].set(middle.X, MaxEdge.Y, middle.Z);
+			corners[4].set(middle.X, middle.Y, MinEdge.Z);
+			corners[5].set(middle.X, middle.Y, MaxEdge.Z);
+		}
+
+		//! Stores the 6 planes defining the box into an array
+		/** \param planes: Pointer to array of 6 planes
+		*   Direction of planes is outwards	*/
+		void getPlanes(plane3d<T> *planes) const
+		{
+			planes[0].setPlane( vector3d<T>(MinEdge.X,0,0), vector3d<T>(-1,0,0));
+			planes[1].setPlane( vector3d<T>(MaxEdge.X,0,0), vector3d<T>(1,0,0));
+			planes[2].setPlane( vector3d<T>(0,MinEdge.Y,0), vector3d<T>(0,-1,0));
+			planes[3].setPlane( vector3d<T>(0,MaxEdge.Y,0), vector3d<T>(0,1,0));
+			planes[4].setPlane( vector3d<T>(0,0,MinEdge.Z), vector3d<T>(0,0,-1));
+			planes[5].setPlane( vector3d<T>(0,0,MaxEdge.Z), vector3d<T>(0,0,1));
 		}
 
 		//! Repairs the box.
@@ -181,6 +218,16 @@ class aabbox3d
 				{ t=MinEdge.Z; MinEdge.Z = MaxEdge.Z; MaxEdge.Z=t; }
 		}
 
+		// Check if MaxEdge > MinEdge
+		bool isValid() const
+		{
+			if (MinEdge.X > MaxEdge.X) return false;
+			if (MinEdge.Y > MaxEdge.Y) return false;
+			if (MinEdge.Z > MaxEdge.Z) return false;
+
+			return true;
+		}
+
 		//! Calculates a new interpolated bounding box.
 		/** d=0 returns other, d=1 returns this, all other values blend between
 		the two boxes.
@@ -189,7 +236,7 @@ class aabbox3d
 		\return Interpolated box. */
 		aabbox3d<T> getInterpolated(const aabbox3d<T>& other, f32 d) const
 		{
-			f32 inv = 1.0f - d;
+			const f32 inv = 1.0f - d;
 			return aabbox3d<T>((other.MinEdge*inv) + (MinEdge*d),
 				(other.MaxEdge*inv) + (MaxEdge*d));
 		}
@@ -218,12 +265,31 @@ class aabbox3d
 
 		//! Check if this box is completely inside the 'other' box.
 		/** \param other: Other box to check against.
-		\return True if this box is completly inside the other box,
+		\return True if this box is completely inside the other box,
 		otherwise false. */
 		bool isFullInside(const aabbox3d<T>& other) const
 		{
 			return (MinEdge.X >= other.MinEdge.X && MinEdge.Y >= other.MinEdge.Y && MinEdge.Z >= other.MinEdge.Z &&
 				MaxEdge.X <= other.MaxEdge.X && MaxEdge.Y <= other.MaxEdge.Y && MaxEdge.Z <= other.MaxEdge.Z);
+		}
+
+		//! Returns the intersection of this box with another, if possible.
+		aabbox3d<T> intersect(const aabbox3d<T>& other) const
+		{
+			aabbox3d<T> out;
+
+			if (!intersectsWithBox(other))
+				return out;
+
+			out.MaxEdge.X = min_(MaxEdge.X, other.MaxEdge.X);
+			out.MaxEdge.Y = min_(MaxEdge.Y, other.MaxEdge.Y);
+			out.MaxEdge.Z = min_(MaxEdge.Z, other.MaxEdge.Z);
+
+			out.MinEdge.X = max_(MinEdge.X, other.MinEdge.X);
+			out.MinEdge.Y = max_(MinEdge.Y, other.MinEdge.Y);
+			out.MinEdge.Z = max_(MinEdge.Z, other.MinEdge.Z);
+
+			return out;
 		}
 
 		//! Determines if the axis-aligned box intersects with another axis-aligned box.

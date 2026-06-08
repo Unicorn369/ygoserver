@@ -2,44 +2,41 @@
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
-#ifndef __IRR_COMPILE_CONFIG_H_INCLUDED__
-#define __IRR_COMPILE_CONFIG_H_INCLUDED__
+#ifndef IRR_COMPILE_CONFIG_H_INCLUDED
+#define IRR_COMPILE_CONFIG_H_INCLUDED
 
 //! Irrlicht SDK Version
 #define IRRLICHT_VERSION_MAJOR 1
-#define IRRLICHT_VERSION_MINOR 8
-#define IRRLICHT_VERSION_REVISION 5
+#define IRRLICHT_VERSION_MINOR 9
+#define IRRLICHT_VERSION_REVISION 0
 // This flag will be defined only in SVN, the official release code will have
 // it undefined
-//#define IRRLICHT_VERSION_SVN -alpha
-#define IRRLICHT_SDK_VERSION "1.8.5"
+#define IRRLICHT_VERSION_SVN alpha
+#define IRRLICHT_SDK_VERSION "1.9.0"
 
 #include <stdio.h> // TODO: Although included elsewhere this is required at least for mingw
 
 //! The defines for different operating system are:
-//! _IRR_XBOX_PLATFORM_ for XBox
 //! _IRR_WINDOWS_ for all irrlicht supported Windows versions
-//! _IRR_WINDOWS_CE_PLATFORM_ for Windows CE
 //! _IRR_WINDOWS_API_ for Windows or XBox
 //! _IRR_LINUX_PLATFORM_ for Linux (it is defined here if no other os is defined)
 //! _IRR_SOLARIS_PLATFORM_ for Solaris
 //! _IRR_OSX_PLATFORM_ for Apple systems running OSX
-//! _IRR_POSIX_API_ for Posix compatible systems
+//! _IRR_POSIX_API_ for POSIX compatible systems
 //! Note: PLATFORM defines the OS specific layer, API can group several platforms
 
 //! DEVICE is the windowing system used, several PLATFORMs support more than one DEVICE
 //! Irrlicht can be compiled with more than one device
 //! _IRR_COMPILE_WITH_WINDOWS_DEVICE_ for Windows API based device
-//! _IRR_COMPILE_WITH_WINDOWS_CE_DEVICE_ for Windows CE API based device
 //! _IRR_COMPILE_WITH_OSX_DEVICE_ for Cocoa native windowing on OSX
 //! _IRR_COMPILE_WITH_X11_DEVICE_ for Linux X11 based device
 //! _IRR_COMPILE_WITH_SDL_DEVICE_ for platform independent SDL framework
 //! _IRR_COMPILE_WITH_CONSOLE_DEVICE_ for no windowing system, used as a fallback
 //! _IRR_COMPILE_WITH_FB_DEVICE_ for framebuffer systems
 
-//! Passing defines to the compiler which have NO in front of the _IRR definename is an alternative
-//! way which can be used to disable defines (instead of outcommenting them in this header).
-//! So defines can be controlled from Makefiles or Projectfiles which allows building
+//! Passing defines to the compiler which have NO in front of the _IRR define name is an alternative
+//! way which can be used to disable defines (instead of commenting them out in this header).
+//! So defines can be controlled from Makefiles or project files which allows building
 //! different library versions without having to change the sources.
 //! Example: NO_IRR_COMPILE_WITH_X11_ would disable X11
 
@@ -65,22 +62,14 @@
 #define _IRR_COMPILE_WITH_WINDOWS_DEVICE_
 #endif
 
-//! WINCE is a very restricted environment for mobile devices
-#if defined(_WIN32_WCE)
-#define _IRR_WINDOWS_
-#define _IRR_WINDOWS_API_
-#define _IRR_WINDOWS_CE_PLATFORM_
-#define _IRR_COMPILE_WITH_WINDOWS_CE_DEVICE_
+#if defined(_MSC_VER) && (_MSC_VER < 1500)
+#  error "Only Microsoft Visual Studio 9.0 and later are supported."
 #endif
 
-#if defined(_MSC_VER) && (_MSC_VER < 1300)
-#  error "Only Microsoft Visual Studio 7.0 and later are supported."
-#endif
-
-// XBox only suppots the native Window stuff
+// XBox is deprecated (as DX8 is removed). Use Irrlicht 1.8 if you still want to work on this.
 #if defined(_XBOX)
 	#undef _IRR_WINDOWS_
-	#define _IRR_XBOX_PLATFORM_
+	#define _IRR_XBOX_PLATFORM_	// deprecated
 	#define _IRR_WINDOWS_API_
 	//#define _IRR_COMPILE_WITH_WINDOWS_DEVICE_
 	#undef _IRR_COMPILE_WITH_WINDOWS_DEVICE_
@@ -95,6 +84,13 @@
 #endif
 #define _IRR_OSX_PLATFORM_
 #define _IRR_COMPILE_WITH_OSX_DEVICE_
+#endif
+
+#if defined(__SVR4) && defined(__sun)
+#define _IRR_SOLARIS_PLATFORM_
+#if defined(__sparc)
+	#define __BIG_ENDIAN__
+#endif
 #endif
 
 #if !defined(_IRR_WINDOWS_API_) && !defined(_IRR_OSX_PLATFORM_)
@@ -114,22 +110,38 @@
 
 
 //! Maximum number of texture an SMaterial can have, up to 8 are supported by Irrlicht.
-#define _IRR_MATERIAL_MAX_TEXTURES_ 4
+#define _IRR_MATERIAL_MAX_TEXTURES_ 8
 
-//! Define _IRR_COMPILE_WITH_DIRECT3D_8_ and _IRR_COMPILE_WITH_DIRECT3D_9_ to
-//! compile the Irrlicht engine with Direct3D8 and/or DIRECT3D9.
-/** If you only want to use the software device or opengl you can disable those defines.
+//! Whether to support XML and XML-based formats (irrmesh, Collada, ...)
+#define _IRR_COMPILE_WITH_XML_
+#ifdef NO_IRR_COMPILE_WITH_XML_
+#undef _IRR_COMPILE_WITH_XML_
+#endif
+
+//! Add a leak-hunter to Irrlicht which helps finding unreleased reference counted objects.
+//! NOTE: This is slow and should only be used for debugging
+//#define _IRR_COMPILE_WITH_LEAK_HUNTER_
+#ifdef NO_IRR_COMPILE_WITH_LEAK_HUNTER_
+#undef _IRR_COMPILE_WITH_LEAK_HUNTER_
+#endif
+
+//! Enable profiling information in the engine
+/** NOTE: The profiler itself always exists and can be used by applications.
+This define is about the engine creating profile data
+while it runs and enabling it will slow down the engine. */
+//#define _IRR_COMPILE_WITH_PROFILING_
+#ifdef NO_IRR_COMPILE_WITH_PROFILING_
+#undef _IRR_COMPILE_WITH_PROFILING_
+#endif
+
+//! Define _IRR_COMPILE_WITH_DIRECT3D_9_ to compile the Irrlicht engine with DIRECT3D9.
+/** If you only want to use the software device or OpenGL you can disable those defines.
 This switch is mostly disabled because people do not get the g++ compiler compile
 directX header files, and directX is only available on Windows platforms. If you
 are using Dev-Cpp, and want to compile this using a DX dev pack, you can define
 _IRR_COMPILE_WITH_DX9_DEV_PACK_. So you simply need to add something like this
 to the compiler settings: -DIRR_COMPILE_WITH_DX9_DEV_PACK
-and this to the linker settings: -ld3dx9 -ld3dx8
-
-Microsoft have chosen to remove D3D8 headers from their recent DXSDKs, and
-so D3D8 support is now disabled by default.  If you really want to build
-with D3D8 support, then you will have to source a DXSDK with the appropriate
-headers, e.g. Summer 2004.  This is a Microsoft issue, not an Irrlicht one.
+and this to the linker settings: -ld3dx9
 */
 #if defined(_IRR_WINDOWS_API_) && (!defined(__GNUC__) || defined(IRR_COMPILE_WITH_DX9_DEV_PACK))
 
@@ -140,18 +152,13 @@ If not defined, Windows Multimedia library is used, which offers also broad supp
 #ifdef NO_IRR_COMPILE_WITH_DIRECTINPUT_JOYSTICK_
 #undef _IRR_COMPILE_WITH_DIRECTINPUT_JOYSTICK_
 #endif
-// can't get this to compile currently under borland, can be removed if someone has a better solution
+// can't get this to compile currently under Borland, can be removed if someone has a better solution
 #if defined(__BORLANDC__)
 #undef _IRR_COMPILE_WITH_DIRECTINPUT_JOYSTICK_
 #endif
 
-//! Only define _IRR_COMPILE_WITH_DIRECT3D_8_ if you have an appropriate DXSDK, e.g. Summer 2004
-// #define _IRR_COMPILE_WITH_DIRECT3D_8_
+//! enabled Direct3D 9
 #define _IRR_COMPILE_WITH_DIRECT3D_9_
-
-#ifdef NO_IRR_COMPILE_WITH_DIRECT3D_8_
-#undef _IRR_COMPILE_WITH_DIRECT3D_8_
-#endif
 #ifdef NO_IRR_COMPILE_WITH_DIRECT3D_9_
 #undef _IRR_COMPILE_WITH_DIRECT3D_9_
 #endif
@@ -165,6 +172,25 @@ define out. */
 #ifdef NO_IRR_COMPILE_WITH_OPENGL_
 #undef _IRR_COMPILE_WITH_OPENGL_
 #endif
+
+//! Define required options for OpenGL drivers.
+#if defined(_IRR_COMPILE_WITH_OPENGL_)
+	#if defined(_IRR_COMPILE_WITH_WINDOWS_DEVICE_)
+		#define _IRR_OPENGL_USE_EXTPOINTER_
+		#define _IRR_COMPILE_WITH_WGL_MANAGER_
+	#elif defined(_IRR_COMPILE_WITH_X11_DEVICE_)
+		#define _IRR_OPENGL_USE_EXTPOINTER_
+		#define _IRR_COMPILE_WITH_GLX_MANAGER_
+	#elif defined(_IRR_COMPILE_WITH_OSX_DEVICE_)
+		#define _IRR_COMPILE_WITH_NSOGL_MANAGER_
+	#elif defined(_IRR_SOLARIS_PLATFORM_)
+		#define _IRR_COMPILE_WITH_GLX_MANAGER_
+	#elif defined(_IRR_COMPILE_WITH_SDL_DEVICE_)
+		#define _IRR_OPENGL_USE_EXTPOINTER_
+	#endif
+#endif
+
+
 
 //! Define _IRR_COMPILE_WITH_SOFTWARE_ to compile the Irrlicht engine with software driver
 /** If you do not need the software driver, or want to use Burning's Video instead,
@@ -190,24 +216,21 @@ define out. */
 #undef _IRR_COMPILE_WITH_X11_
 #endif
 
-//! Define _IRR_OPENGL_USE_EXTPOINTER_ if the OpenGL renderer should use OpenGL extensions via function pointers.
-/** On some systems there is no support for the dynamic extension of OpenGL
-	via function pointers such that this has to be undef'ed. */
-#if !defined(_IRR_OSX_PLATFORM_) && !defined(_IRR_SOLARIS_PLATFORM_)
-#define _IRR_OPENGL_USE_EXTPOINTER_
-#endif
-
-//! On some Linux systems the XF86 vidmode extension or X11 RandR are missing. Use these flags
-//! to remove the dependencies such that Irrlicht will compile on those systems, too.
-//! If you don't need colored cursors you can also disable the Xcursor extension
+//! On some Linux systems the XF86 vidmode extension, X11 RandR, or XInput2 are missing.
+//! Use these defines to add/remove support for those dependencies as needed.
+//! XInput2 (library called Xi) is currently only used to support touch-input.
 #if defined(_IRR_LINUX_PLATFORM_) && defined(_IRR_COMPILE_WITH_X11_)
 #define _IRR_LINUX_X11_VIDMODE_
 //#define _IRR_LINUX_X11_RANDR_
+//#define _IRR_LINUX_X11_XINPUT2_
 #ifdef NO_IRR_LINUX_X11_VIDMODE_
 #undef _IRR_LINUX_X11_VIDMODE_
 #endif
 #ifdef NO_IRR_LINUX_X11_RANDR_
 #undef _IRR_LINUX_X11_RANDR_
+#endif
+#ifdef NO_IRR_LINUX_X11_XINPUT2_
+#undef _IRR_LINUX_X11_XINPUT2_
 #endif
 
 //! X11 has by default only monochrome cursors, but using the Xcursor library we can also get color cursor support.
@@ -228,9 +251,16 @@ you will not be able to use anything provided by the GUI Environment, including 
 #undef _IRR_COMPILE_WITH_GUI_
 #endif
 
+//! Define _IRR_COMPILE_WITH_PARTICLES to compile the engine the with the build-in particle system
+/** You can disable this if you don't need particles or use an external particle system. */
+#define _IRR_COMPILE_WITH_PARTICLES_
+#ifdef NO_IRR_COMPILE_WITH_PARTICLES_
+#undef _IRR_COMPILE_WITH_PARTICLES_
+#endif
+
 //! Define _IRR_WCHAR_FILESYSTEM to enable unicode filesystem support for the engine.
 /** This enables the engine to read/write from unicode filesystem. If you
-disable this feature, the engine behave as before (ansi). This is currently only supported
+disable this feature, the engine behave as before (ANSI). This is currently only supported
 for Windows based systems. You also have to set #define UNICODE for this to compile.
 */
 //#define _IRR_WCHAR_FILESYSTEM
@@ -248,7 +278,9 @@ the engine will no longer read .jpeg images. */
 
 //! Define _IRR_USE_NON_SYSTEM_JPEG_LIB_ to let irrlicht use the jpeglib which comes with irrlicht.
 /** If this is commented out, Irrlicht will try to compile using the jpeg lib installed in the system.
-	This is only used when _IRR_COMPILE_WITH_LIBJPEG_ is defined. */
+	This is only used when _IRR_COMPILE_WITH_LIBJPEG_ is defined.
+	NOTE: You will also have to modify the Makefile or project files when changing this default.
+	*/
 #define _IRR_USE_NON_SYSTEM_JPEG_LIB_
 #ifdef NO_IRR_USE_NON_SYSTEM_JPEG_LIB_
 #undef _IRR_USE_NON_SYSTEM_JPEG_LIB_
@@ -264,7 +296,9 @@ the engine will no longer read .png images. */
 
 //! Define _IRR_USE_NON_SYSTEM_LIBPNG_ to let irrlicht use the libpng which comes with irrlicht.
 /** If this is commented out, Irrlicht will try to compile using the libpng installed in the system.
-	This is only used when _IRR_COMPILE_WITH_LIBPNG_ is defined. */
+	This is only used when _IRR_COMPILE_WITH_LIBPNG_ is defined.
+	NOTE: You will also have to modify the Makefile or project files when changing this default.
+	*/
 #define _IRR_USE_NON_SYSTEM_LIB_PNG_
 #ifdef NO_IRR_USE_NON_SYSTEM_LIB_PNG_
 #undef _IRR_USE_NON_SYSTEM_LIB_PNG_
@@ -293,15 +327,6 @@ to provide the user with the proper DLL. That's why it's disabled by default. */
 //#define _IRR_D3D_USE_LEGACY_HLSL_COMPILER
 #ifdef NO_IRR_D3D_USE_LEGACY_HLSL_COMPILER
 #undef _IRR_D3D_USE_LEGACY_HLSL_COMPILER
-#endif
-
-//! Define _IRR_COMPILE_WITH_CG_ to enable Cg Shading Language support
-//#define _IRR_COMPILE_WITH_CG_
-#ifdef NO_IRR_COMPILE_WITH_CG_
-#undef _IRR_COMPILE_WITH_CG_
-#endif
-#if !defined(_IRR_COMPILE_WITH_OPENGL_) && !defined(_IRR_COMPILE_WITH_DIRECT3D_9_)
-#undef _IRR_COMPILE_WITH_CG_
 #endif
 
 //! Define _IRR_USE_NVIDIA_PERFHUD_ to opt-in to using the nVidia PerHUD tool
@@ -334,6 +359,54 @@ tool <http://developer.nvidia.com/object/nvperfhud_home.html>. */
 
 //! Uncomment the following line if you want to ignore the deprecated warnings
 //#define IGNORE_DEPRECATED_WARNING
+
+//! Define _IRR_COMPILE_WITH_SHADOW_VOLUME_SCENENODE_ to support ShadowVolumes
+#define _IRR_COMPILE_WITH_SHADOW_VOLUME_SCENENODE_
+#ifdef NO_IRR_COMPILE_WITH_SHADOW_VOLUME_SCENENODE_
+#undef _IRR_COMPILE_WITH_SHADOW_VOLUME_SCENENODE_
+#endif
+
+//! Define _IRR_COMPILE_WITH_OCTREE_SCENENODE_ to support OctreeSceneNodes
+#define _IRR_COMPILE_WITH_OCTREE_SCENENODE_
+#ifdef NO_IRR_COMPILE_WITH_OCTREE_SCENENODE_
+#undef _IRR_COMPILE_WITH_OCTREE_SCENENODE_
+#endif
+
+//! Define _IRR_COMPILE_WITH_TERRAIN_SCENENODE_ to support TerrainSceneNodes
+#define _IRR_COMPILE_WITH_TERRAIN_SCENENODE_
+#ifdef NO_IRR_COMPILE_WITH_TERRAIN_SCENENODE_
+#undef _IRR_COMPILE_WITH_TERRAIN_SCENENODE_
+#endif
+
+//! Define _IRR_COMPILE_WITH_BILLBOARD_SCENENODE_ to support BillboardSceneNodes
+#define _IRR_COMPILE_WITH_BILLBOARD_SCENENODE_
+#ifdef NO_IRR_COMPILE_WITH_BILLBOARD_SCENENODE_
+#undef _IRR_COMPILE_WITH_BILLBOARD_SCENENODE_
+#endif
+
+//! Define _IRR_COMPILE_WITH_WATER_SURFACE_SCENENODE_ to support WaterSurfaceSceneNodes
+#define _IRR_COMPILE_WITH_WATER_SURFACE_SCENENODE_
+#ifdef NO_IRR_COMPILE_WITH_WATER_SURFACE_SCENENODE_
+#undef _IRR_COMPILE_WITH_WATER_SURFACE_SCENENODE_
+#endif
+
+//! Define _IRR_COMPILE_WITH_SKYDOME_SCENENODE_ to support SkydomeSceneNodes
+#define _IRR_COMPILE_WITH_SKYDOME_SCENENODE_
+#ifdef NO_IRR_COMPILE_WITH_SKYDOME_SCENENODE_
+#undef _IRR_COMPILE_WITH_SKYDOME_SCENENODE_
+#endif
+
+//! Define _IRR_COMPILE_WITH_CUBE_SCENENODE_ to support CubeSceneNodes
+#define _IRR_COMPILE_WITH_CUBE_SCENENODE_
+#ifdef NO_IRR_COMPILE_WITH_CUBE_SCENENODE_
+#undef _IRR_COMPILE_WITH_CUBE_SCENENODE_
+#endif
+
+//! Define _IRR_COMPILE_WITH_SPHERE_SCENENODE_ to support CubeSceneNodes
+#define _IRR_COMPILE_WITH_SPHERE_SCENENODE_
+#ifdef NO_IRR_COMPILE_WITH_SPHERE_SCENENODE_
+#undef _IRR_COMPILE_WITH_SPHERE_SCENENODE_
+#endif
 
 //! Define _IRR_COMPILE_WITH_IRR_SCENE_LOADER_ if you want to be able to load
 /** .irr scenes using ISceneManager::loadScene */
@@ -371,14 +444,14 @@ B3D, MS3D or X meshes */
 #ifdef NO_IRR_COMPILE_WITH_OGRE_LOADER_
 #undef _IRR_COMPILE_WITH_OGRE_LOADER_
 #endif
-#endif	// _IRR_COMPILE_WITH_SKINNED_MESH_SUPPORT_
+#endif // _IRR_COMPILE_WITH_SKINNED_MESH_SUPPORT_
 
 //! Define _IRR_COMPILE_WITH_IRR_MESH_LOADER_ if you want to load Irrlicht Engine .irrmesh files
 #define _IRR_COMPILE_WITH_IRR_MESH_LOADER_
 #ifdef NO_IRR_COMPILE_WITH_IRR_MESH_LOADER_
 #undef _IRR_COMPILE_WITH_IRR_MESH_LOADER_
 #endif
-//! Define _IRR_COMPILE_WITH_HALFLIFE_LOADER_ if you want to load Halflife animated files
+//! Define _IRR_COMPILE_WITH_HALFLIFE_LOADER_ if you want to load Half-life animated files
 #define _IRR_COMPILE_WITH_HALFLIFE_LOADER_
 #ifdef NO_IRR_COMPILE_WITH_HALFLIFE_LOADER_
 #undef _IRR_COMPILE_WITH_HALFLIFE_LOADER_
@@ -424,7 +497,11 @@ B3D, MS3D or X meshes */
 #undef _IRR_COMPILE_WITH_LMTS_LOADER_
 #endif
 //! Define _IRR_COMPILE_WITH_MY3D_LOADER_ if you want to load MY3D files
-#define _IRR_COMPILE_WITH_MY3D_LOADER_
+//! Note: As My3DTools can't be found on the web anymore and there hasn't been 
+//! any update about it since around 2005 the loader is deprecated with 
+//! Irrlicht 1.9 and will be removed in Irrlicht 1.10 unless there are any
+//! news about the tool.
+//#define _IRR_COMPILE_WITH_MY3D_LOADER_
 #ifdef NO_IRR_COMPILE_WITH_MY3D_LOADER_
 #undef _IRR_COMPILE_WITH_MY3D_LOADER_
 #endif
@@ -484,6 +561,11 @@ B3D, MS3D or X meshes */
 #ifdef NO_IRR_COMPILE_WITH_PLY_WRITER_
 #undef _IRR_COMPILE_WITH_PLY_WRITER_
 #endif
+//! Define _IRR_COMPILE_WITH_B3D_WRITER_ if you want to write .b3d files
+#define _IRR_COMPILE_WITH_B3D_WRITER_
+#ifdef NO_IRR_COMPILE_WITH_B3D_WRITER_
+#undef _IRR_COMPILE_WITH_B3D_WRITER_
+#endif
 
 //! Define _IRR_COMPILE_WITH_BMP_LOADER_ if you want to load .bmp files
 //! Disabling this loader will also disable the built-in font
@@ -516,14 +598,29 @@ B3D, MS3D or X meshes */
 #ifdef NO_IRR_COMPILE_WITH_PSD_LOADER_
 #undef _IRR_COMPILE_WITH_PSD_LOADER_
 #endif
-//! Define _IRR_COMPILE_WITH_DDS_LOADER_ if you want to load .dds files
-// Outcommented because
+//! Define _IRR_COMPILE_WITH_PVR_LOADER_ if you want to load .pvr files
+#define _IRR_COMPILE_WITH_PVR_LOADER_
+#ifdef NO_IRR_COMPILE_WITH_PVR_LOADER_
+#undef _IRR_COMPILE_WITH_PVR_LOADER_
+#endif
+//! Define _IRR_COMPILE_WITH_DDS_LOADER_ if you want to load compressed .dds files
+// Patent problem isn't related to this loader.
+#define _IRR_COMPILE_WITH_DDS_LOADER_
+#ifdef NO_IRR_COMPILE_WITH_DDS_LOADER_
+#undef _IRR_COMPILE_WITH_DDS_LOADER_
+#endif
+//! Define _IRR_COMPILE_WITH_DDS_DECODER_LOADER_ if you want to load .dds files
+//! loader will decompress these files and will send to the memory as uncompressed files.
+// Commented out because
 // a) it doesn't compile on 64-bit currently
 // b) anyone enabling it should be aware that S3TC compression algorithm which might be used in that loader
 // is patented in the US by S3 and they do collect license fees when it's used in applications.
 // So if you are unfortunate enough to develop applications for US market and their broken patent system be careful.
-// #define _IRR_COMPILE_WITH_DDS_LOADER_
-#ifdef NO_IRR_COMPILE_WITH_DDS_LOADER_
+// #define _IRR_COMPILE_WITH_DDS_DECODER_LOADER_
+#ifdef NO_IRR_COMPILE_WITH_DDS_DECODER_LOADER_
+#undef _IRR_COMPILE_WITH_DDS_DECODER_LOADER_
+#endif
+#ifdef _IRR_COMPILE_WITH_DDS_DECODER_LOADER_
 #undef _IRR_COMPILE_WITH_DDS_LOADER_
 #endif
 //! Define _IRR_COMPILE_WITH_TGA_LOADER_ if you want to load .tga files
@@ -600,8 +697,10 @@ ones. */
 #endif
 //! Define _IRR_USE_NON_SYSTEM_ZLIB_ to let irrlicht use the zlib which comes with irrlicht.
 /** If this is commented out, Irrlicht will try to compile using the zlib
-installed on the system. This is only used when _IRR_COMPILE_WITH_ZLIB_ is
-defined. */
+	installed on the system. This is only used when _IRR_COMPILE_WITH_ZLIB_ is
+	defined.
+	NOTE: You will also have to modify the Makefile or project files when changing this default.
+ */
 #define _IRR_USE_NON_SYSTEM_ZLIB_
 #ifdef NO_IRR_USE_NON_SYSTEM_ZLIB_
 #undef _IRR_USE_NON_SYSTEM_ZLIB_
@@ -622,7 +721,9 @@ library. */
 //! Define _IRR_USE_NON_SYSTEM_BZLIB_ to let irrlicht use the bzlib which comes with irrlicht.
 /** If this is commented out, Irrlicht will try to compile using the bzlib
 installed on the system. This is only used when _IRR_COMPILE_WITH_BZLIB_ is
-defined. */
+defined.
+NOTE: You will also have to modify the Makefile or project files when changing this default.
+*/
 #define _IRR_USE_NON_SYSTEM_BZLIB_
 #ifdef NO_IRR_USE_NON_SYSTEM_BZLIB_
 #undef _IRR_USE_NON_SYSTEM_BZLIB_
@@ -709,81 +810,8 @@ precision will be lower but speed higher. currently X86 only
 
 #endif // _IRR_WINDOWS_API_
 
-// We need to disable DIRECT3D9 support for Visual Studio 6.0 because
-// those $%&$!! disabled support for it since Dec. 2004 and users are complaining
-// about linker errors. Comment this out only if you are knowing what you are
-// doing. (Which means you have an old DX9 SDK and VisualStudio6).
-#ifdef _MSC_VER
-#if (_MSC_VER < 1300 && !defined(__GNUC__))
-#undef _IRR_COMPILE_WITH_DIRECT3D_9_
-#pragma message("Compiling Irrlicht with Visual Studio 6.0, support for DX9 is disabled.")
-#endif
-#endif
-
-// XBox does not have OpenGL or DirectX9
-#if defined(_IRR_XBOX_PLATFORM_)
-	#undef _IRR_COMPILE_WITH_OPENGL_
-	#undef _IRR_COMPILE_WITH_DIRECT3D_9_
-#endif
-
-//! WinCE does not have OpenGL or DirectX9. use minimal loaders
-#if defined(_WIN32_WCE)
-	#undef _IRR_COMPILE_WITH_OPENGL_
-	#undef _IRR_COMPILE_WITH_DIRECT3D_8_
-	#undef _IRR_COMPILE_WITH_DIRECT3D_9_
-
-	#undef BURNINGVIDEO_RENDERER_BEAUTIFUL
-	#undef BURNINGVIDEO_RENDERER_FAST
-	#undef BURNINGVIDEO_RENDERER_ULTRA_FAST
-	#define BURNINGVIDEO_RENDERER_CE
-
-	#undef _IRR_COMPILE_WITH_WINDOWS_DEVICE_
-	#define _IRR_COMPILE_WITH_WINDOWS_CE_DEVICE_
-	//#define _IRR_WCHAR_FILESYSTEM
-
-	#undef _IRR_COMPILE_WITH_IRR_MESH_LOADER_
-	//#undef _IRR_COMPILE_WITH_MD2_LOADER_
-	#undef _IRR_COMPILE_WITH_MD3_LOADER_
-	#undef _IRR_COMPILE_WITH_3DS_LOADER_
-	#undef _IRR_COMPILE_WITH_COLLADA_LOADER_
-	#undef _IRR_COMPILE_WITH_CSM_LOADER_
-	#undef _IRR_COMPILE_WITH_BSP_LOADER_
-	#undef _IRR_COMPILE_WITH_DMF_LOADER_
-	#undef _IRR_COMPILE_WITH_LMTS_LOADER_
-	#undef _IRR_COMPILE_WITH_MY3D_LOADER_
-	#undef _IRR_COMPILE_WITH_OBJ_LOADER_
-	#undef _IRR_COMPILE_WITH_OCT_LOADER_
-	#undef _IRR_COMPILE_WITH_OGRE_LOADER_
-	#undef _IRR_COMPILE_WITH_LWO_LOADER_
-	#undef _IRR_COMPILE_WITH_STL_LOADER_
-	#undef _IRR_COMPILE_WITH_IRR_WRITER_
-	#undef _IRR_COMPILE_WITH_COLLADA_WRITER_
-	#undef _IRR_COMPILE_WITH_STL_WRITER_
-	#undef _IRR_COMPILE_WITH_OBJ_WRITER_
-	//#undef _IRR_COMPILE_WITH_BMP_LOADER_
-	//#undef _IRR_COMPILE_WITH_JPG_LOADER_
-	#undef _IRR_COMPILE_WITH_PCX_LOADER_
-	//#undef _IRR_COMPILE_WITH_PNG_LOADER_
-	#undef _IRR_COMPILE_WITH_PPM_LOADER_
-	#undef _IRR_COMPILE_WITH_PSD_LOADER_
-	//#undef _IRR_COMPILE_WITH_TGA_LOADER_
-	#undef _IRR_COMPILE_WITH_WAL_LOADER_
-	#undef _IRR_COMPILE_WITH_BMP_WRITER_
-	#undef _IRR_COMPILE_WITH_JPG_WRITER_
-	#undef _IRR_COMPILE_WITH_PCX_WRITER_
-	#undef _IRR_COMPILE_WITH_PNG_WRITER_
-	#undef _IRR_COMPILE_WITH_PPM_WRITER_
-	#undef _IRR_COMPILE_WITH_PSD_WRITER_
-	#undef _IRR_COMPILE_WITH_TGA_WRITER_
-
-#endif
-
 #ifndef _IRR_WINDOWS_API_
 	#undef _IRR_WCHAR_FILESYSTEM
-#endif
-
-#if defined(__sparc__) || defined(__sun__)
-#define __BIG_ENDIAN__
 #endif
 
 #if defined(_IRR_SOLARIS_PLATFORM_)
@@ -796,12 +824,19 @@ precision will be lower but speed higher. currently X86 only
 #undef __IRR_HAS_S64
 #endif
 
+// These depend on XML
+#ifndef _IRR_COMPILE_WITH_XML_
+	#undef _IRR_COMPILE_WITH_IRR_MESH_LOADER_
+	#undef _IRR_COMPILE_WITH_IRR_WRITER_
+	#undef _IRR_COMPILE_WITH_COLLADA_WRITER_
+	#undef _IRR_COMPILE_WITH_COLLADA_LOADER_
+#endif
+
 #if defined(__BORLANDC__)
 	#include <tchar.h>
 
-	// Borland 5.5.1 does not have _strcmpi defined
+	// Borland 5.5.1
 	#if __BORLANDC__ == 0x551
-	//    #define _strcmpi strcmpi
 		#undef _tfinddata_t
 		#undef _tfindfirst
 		#undef _tfindnext
@@ -811,7 +846,10 @@ precision will be lower but speed higher. currently X86 only
 		#define _tfindnext   __tfindnext
 		typedef long intptr_t;
 	#endif
+#endif
 
+#ifndef __has_feature
+  #define __has_feature(x) 0  // Compatibility with non-clang compilers.
 #endif
 
 #ifdef _DEBUG
@@ -828,5 +866,11 @@ precision will be lower but speed higher. currently X86 only
 	#endif
 #endif
 
-#endif // __IRR_COMPILE_CONFIG_H_INCLUDED__
+//! Solve Camera errors - Debug Feature
+/* - Allow Camera 90 degree up, Target==Position,buildCameraLookAtMatrixLH
+   - pre v1.9 CCameraSceneNode moved the up non-particular in the positive x-Direction. not compatible
+   - Enabled is not compatible with Irrlicht Collision and Response. 
+*/
+//#define _IRR_COMPILE_WITH_90_DEGREE_CAMERA
 
+#endif // IRR_COMPILE_CONFIG_H_INCLUDED

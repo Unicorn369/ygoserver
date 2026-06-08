@@ -2,8 +2,8 @@
 // This file is part of the "Irrlicht Engine" and the "irrXML" project.
 // For conditions of distribution and use, see copyright notice in irrlicht.h and irrXML.h
 
-#ifndef __IRR_ARRAY_H_INCLUDED__
-#define __IRR_ARRAY_H_INCLUDED__
+#ifndef IRR_ARRAY_H_INCLUDED
+#define IRR_ARRAY_H_INCLUDED
 
 #include "irrTypes.h"
 #include "heapsort.h"
@@ -25,8 +25,7 @@ class array
 public:
 
 	//! Default constructor for empty array.
-	array()
-		: data(0), allocated(0), used(0),
+	array() : data(0), allocated(0), used(0),
 			strategy(ALLOC_STRATEGY_DOUBLE), free_when_destroyed(true), is_sorted(true)
 	{
 	}
@@ -34,9 +33,9 @@ public:
 
 	//! Constructs an array and allocates an initial chunk of memory.
 	/** \param start_count Amount of elements to pre-allocate. */
-	array(u32 start_count)
-      : data(0), allocated(0), used(0),
-        strategy(ALLOC_STRATEGY_DOUBLE), free_when_destroyed(true), is_sorted(true)
+	explicit array(u32 start_count) : data(0), allocated(0), used(0),
+			strategy(ALLOC_STRATEGY_DOUBLE),
+			free_when_destroyed(true), is_sorted(true)
 	{
 		reallocate(start_count);
 	}
@@ -77,7 +76,7 @@ public:
 		allocated = new_size;
 
 		// copy old data
-		s32 end = used < new_size ? used : new_size;
+		const s32 end = used < new_size ? used : new_size;
 
 		for (s32 i=0; i<end; ++i)
 		{
@@ -127,14 +126,12 @@ public:
 
 
 	//! Insert item into array at specified position.
-	/** Please use this only if you know what you are doing (possible
-	performance loss). The preferred method of adding elements should be
-	push_back().
+	/**
 	\param element: Element to be inserted
 	\param index: Where position to insert the new element. */
 	void insert(const T& element, u32 index=0)
 	{
-		_IRR_DEBUG_BREAK_IF(index>used) // access violation
+		IRR_DEBUG_BREAK_IF(index>used) // access violation
 
 		if (used + 1 > allocated)
 		{
@@ -148,8 +145,7 @@ public:
 			switch ( strategy )
 			{
 				case ALLOC_STRATEGY_DOUBLE:
-					newAlloc = used + 1 + (allocated < 500 ?
-							(allocated < 5 ? 5 : used) : used >> 2);
+					newAlloc = used + 5 + (allocated < 500 ? used : used >> 2);
 					break;
 				default:
 				case ALLOC_STRATEGY_SAFE:
@@ -235,6 +231,41 @@ public:
 		free_when_destroyed=_free_when_destroyed;
 	}
 
+	//! Set (copy) data from given memory block
+	/** \param newData data to set, must have newSize elements
+	\param newSize Amount of elements in newData
+	\param newDataIsSorted Info if you pass sorted/unsorted data
+	\param canShrink Specifies whether the array is reallocated even if
+	enough space is available. Setting this flag to false can speed up
+	array usage, but may use more memory than required by the data.
+	*/
+	void set_data(const T* newData, u32 newSize, bool newDataIsSorted=false, bool canShrink=false)
+	{
+		reallocate(newSize, canShrink);
+		set_used(newSize);
+		for ( u32 i=0; i<newSize; ++i)
+		{
+			data[i] = newData[i];
+		}
+		is_sorted = newDataIsSorted;
+	}
+
+	//! Compare if given data block is identical to the data in our array
+	/** Like operator ==, but without the need to create the array
+	\param otherData Address to data against which we compare, must contain size elements
+	\param size Amount of elements in otherData	*/
+	bool equals(const T* otherData, u32 size) const
+	{
+		if (used != size)
+			return false;
+
+		for (u32 i=0; i<size; ++i)
+			if (data[i] != otherData[i])
+				return false;
+		return true;
+	}
+
+
 
 	//! Sets if the array should delete the memory it uses upon destruction.
 	/** Also clear and set_pointer will only delete the (original) memory
@@ -262,7 +293,6 @@ public:
 		used = usedNow;
 	}
 
-
 	//! Assignment operator
 	const array<T, TAlloc>& operator=(const array<T, TAlloc>& other)
 	{
@@ -270,22 +300,27 @@ public:
 			return *this;
 		strategy = other.strategy;
 
+		// (TODO: we could probably avoid re-allocations of data when (allocated < other.allocated)
+
 		if (data)
 			clear();
-
-		//if (allocated < other.allocated)
-		if (other.allocated == 0)
-			data = 0;
-		else
-			data = allocator.allocate(other.allocated); // new T[other.allocated];
 
 		used = other.used;
 		free_when_destroyed = true;
 		is_sorted = other.is_sorted;
 		allocated = other.allocated;
 
-		for (u32 i=0; i<other.used; ++i)
-			allocator.construct(&data[i], other.data[i]); // data[i] = other.data[i];
+		if (other.allocated == 0)
+		{
+			data = 0;
+		}
+		else
+		{
+			data = allocator.allocate(other.allocated); // new T[other.allocated];
+
+			for (u32 i=0; i<other.used; ++i)
+				allocator.construct(&data[i], other.data[i]); // data[i] = other.data[i];
+		}
 
 		return *this;
 	}
@@ -294,13 +329,7 @@ public:
 	//! Equality operator
 	bool operator == (const array<T, TAlloc>& other) const
 	{
-		if (used != other.used)
-			return false;
-
-		for (u32 i=0; i<other.used; ++i)
-			if (data[i] != other[i])
-				return false;
-		return true;
+		return equals(other.const_pointer(), other.size());
 	}
 
 
@@ -314,7 +343,7 @@ public:
 	//! Direct access operator
 	T& operator [](u32 index)
 	{
-		_IRR_DEBUG_BREAK_IF(index>=used) // access violation
+		IRR_DEBUG_BREAK_IF(index>=used) // access violation
 
 		return data[index];
 	}
@@ -323,7 +352,7 @@ public:
 	//! Direct const access operator
 	const T& operator [](u32 index) const
 	{
-		_IRR_DEBUG_BREAK_IF(index>=used) // access violation
+		IRR_DEBUG_BREAK_IF(index>=used) // access violation
 
 		return data[index];
 	}
@@ -332,7 +361,7 @@ public:
 	//! Gets last element.
 	T& getLast()
 	{
-		_IRR_DEBUG_BREAK_IF(!used) // access violation
+		IRR_DEBUG_BREAK_IF(!used) // access violation
 
 		return data[used-1];
 	}
@@ -341,7 +370,7 @@ public:
 	//! Gets last element
 	const T& getLast() const
 	{
-		_IRR_DEBUG_BREAK_IF(!used) // access violation
+		IRR_DEBUG_BREAK_IF(!used) // access violation
 
 		return data[used-1];
 	}
@@ -468,8 +497,8 @@ public:
 	//! it is used for searching a multiset
 	/** The array will be sorted before the binary search if it is not
 	already sorted.
-	\param element	Element to search for.
-	\param &last	return lastIndex of equal elements
+	\param element Element to search for.
+	\param &last return lastIndex of equal elements
 	\return Position of the first searched element if it was found,
 	otherwise -1 is returned. */
 	s32 binary_search_multi(const T& element, s32 &last)
@@ -497,29 +526,31 @@ public:
 	}
 
 
-	//! Finds an element in linear time, which is very slow.
-	/** Use binary_search for faster finding. Only works if ==operator is
-	implemented.
-	\param element Element to search for.
+	//! Finds an element by searching linearly from array start to end
+	/** Can be slow with large arrays, try binary_search for those.
+	Only works if corresponding operator== is implemented.
+	\param element Element to search for. 
 	\return Position of the searched element if it was found, otherwise -1
 	is returned. */
-	s32 linear_search(const T& element) const
+	template <class E>
+	s32 linear_search(const E& element) const
 	{
 		for (u32 i=0; i<used; ++i)
-			if (element == data[i])
+			if (data[i] == element)
 				return (s32)i;
 
 		return -1;
 	}
 
 
-	//! Finds an element in linear time, which is very slow.
-	/** Use binary_search for faster finding. Only works if ==operator is
-	implemented.
-	\param element: Element to search for.
+	//! Finds an element by searching linearly from array end to start.
+	/** Can be slow with large arrays, try binary_search for those.
+	Only works if corresponding operator== is implemented.
+	\param element Element to search for.
 	\return Position of the searched element if it was found, otherwise -1
 	is returned. */
-	s32 linear_reverse_search(const T& element) const
+	template <class E>
+	s32 linear_reverse_search(const E& element) const
 	{
 		for (s32 i=used-1; i>=0; --i)
 			if (data[i] == element)
@@ -535,7 +566,7 @@ public:
 	\param index: Index of element to be erased. */
 	void erase(u32 index)
 	{
-		_IRR_DEBUG_BREAK_IF(index>=used) // access violation
+		IRR_DEBUG_BREAK_IF(index>=used) // access violation
 
 		for (u32 i=index+1; i<used; ++i)
 		{
@@ -567,12 +598,12 @@ public:
 
 		for (i=index+count; i<used; ++i)
 		{
-			if (i-count >= index+count)	// not already destructed before loop
+			if (i-count >= index+count) // not already destructed before loop
 				allocator.destruct(&data[i-count]);
 
 			allocator.construct(&data[i-count], data[i]); // data[i-count] = data[i];
 
-			if (i >= used-count)	// those which are not overwritten
+			if (i >= used-count) // those which are not overwritten
 				allocator.destruct(&data[i]);
 		}
 
@@ -588,16 +619,16 @@ public:
 
 
 	//! Swap the content of this array container with the content of another array
-	/** Afterwards this object will contain the content of the other object and the other
+	/** Afterward this object will contain the content of the other object and the other
 	object will contain the content of this object.
-	\param other Swap content with this object	*/
+	\param other Swap content with this object */
 	void swap(array<T, TAlloc>& other)
 	{
 		core::swap(data, other.data);
 		core::swap(allocated, other.allocated);
 		core::swap(used, other.used);
-		core::swap(allocator, other.allocator);	// memory is still released by the same allocator used for allocation
-		eAllocStrategy helper_strategy(strategy);	// can't use core::swap with bitfields
+		core::swap(allocator, other.allocator); // memory is still released by the same allocator used for allocation
+		eAllocStrategy helper_strategy(strategy); // can't use core::swap with bitfields
 		strategy = other.strategy;
 		other.strategy = helper_strategy;
 		bool helper_free_when_destroyed(free_when_destroyed);
@@ -608,6 +639,9 @@ public:
 		other.is_sorted = helper_is_sorted;
 	}
 
+	typedef TAlloc allocator_type;
+	typedef T value_type;
+	typedef u32 size_type;
 
 private:
 	T* data;

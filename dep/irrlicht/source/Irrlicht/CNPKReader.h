@@ -3,16 +3,14 @@
 // This file is part of the "Irrlicht Engine".
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
-#ifndef __C_NPK_READER_H_INCLUDED__
-#define __C_NPK_READER_H_INCLUDED__
+#ifndef IRR_C_NPK_READER_H_INCLUDED
+#define IRR_C_NPK_READER_H_INCLUDED
 
 #include "IrrCompileConfig.h"
 
 #ifdef __IRR_COMPILE_WITH_NPK_ARCHIVE_LOADER_
 
-#include "IReferenceCounted.h"
 #include "IReadFile.h"
-#include "irrArray.h"
 #include "irrString.h"
 #include "IFileSystem.h"
 #include "CFileList.h"
@@ -51,31 +49,28 @@ namespace io
 
 		//! returns true if the file maybe is able to be loaded by this class
 		//! based on the file extension (e.g. ".zip")
-		virtual bool isALoadableFileFormat(const io::path& filename) const;
+		virtual bool isALoadableFileFormat(const io::path& filename) const IRR_OVERRIDE;
 
 		//! Check if the file might be loaded by this class
 		/** Check might look into the file.
 		\param file File handle to check.
 		\return True if file seems to be loadable. */
-		virtual bool isALoadableFileFormat(io::IReadFile* file) const;
+		virtual bool isALoadableFileFormat(io::IReadFile* file) const IRR_OVERRIDE;
 
 		//! Check to see if the loader can create archives of this type.
 		/** Check based on the archive type.
 		\param fileType The archive type to check.
 		\return True if the archile loader supports this type, false if not */
-		virtual bool isALoadableFileFormat(E_FILE_ARCHIVE_TYPE fileType) const;
+		virtual bool isALoadableFileFormat(E_FILE_ARCHIVE_TYPE fileType) const IRR_OVERRIDE;
 
 		//! Creates an archive from the filename
 		/** \param file File handle to check.
 		\return Pointer to newly created archive, or 0 upon error. */
-		virtual IFileArchive* createArchive(const io::path& filename, bool ignoreCase, bool ignorePaths) const;
+		virtual IFileArchive* createArchive(const io::path& filename, bool ignoreCase, bool ignorePaths) const IRR_OVERRIDE;
 
 		//! creates/loads an archive from the file.
 		//! \return Pointer to the created archive. Returns 0 if loading failed.
-		virtual io::IFileArchive* createArchive(io::IReadFile* file, bool ignoreCase, bool ignorePaths) const;
-
-		//! Returns the type of archive created by this loader
-		virtual E_FILE_ARCHIVE_TYPE getType() const { return EFAT_NPK; }
+		virtual io::IFileArchive* createArchive(io::IReadFile* file, bool ignoreCase, bool ignorePaths) const IRR_OVERRIDE;
 
 	private:
 		io::IFileSystem* FileSystem;
@@ -93,22 +88,22 @@ namespace io
 		// file archive methods
 
 		//! return the id of the file Archive
-		virtual const io::path& getArchiveName() const
+		virtual const io::path& getArchiveName() const IRR_OVERRIDE
 		{
 			return File->getFileName();
 		}
 
 		//! opens a file by file name
-		virtual IReadFile* createAndOpenFile(const io::path& filename);
+		virtual IReadFile* createAndOpenFile(const io::path& filename) IRR_OVERRIDE;
 
 		//! opens a file by index
-		virtual IReadFile* createAndOpenFile(u32 index);
+		virtual IReadFile* createAndOpenFile(u32 index) IRR_OVERRIDE;
 
 		//! returns the list of files
-		virtual const IFileList* getFileList() const;
+		virtual const IFileList* getFileList() const IRR_OVERRIDE;
 
 		//! get the class Type
-		virtual E_FILE_ARCHIVE_TYPE getType() const { return EFAT_NPK; }
+		virtual E_FILE_ARCHIVE_TYPE getType() const IRR_OVERRIDE { return EFAT_NPK; }
 
 	private:
 
@@ -124,5 +119,4 @@ namespace io
 
 #endif // __IRR_COMPILE_WITH_NPK_ARCHIVE_LOADER_
 
-#endif // __C_NPK_READER_H_INCLUDED__
-
+#endif // IRR_C_NPK_READER_H_INCLUDED
