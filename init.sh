@@ -74,7 +74,7 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "YGOServer Build 2026/06/15"
+            echo "YGOServer-Koishi Build 2026/06/15"
             shift && exit
             ;;
         --install-mono|mono)
