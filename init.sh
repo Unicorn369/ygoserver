@@ -74,7 +74,7 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "YGOServer Build 2026/05/24"
+            echo "YGOServer Build 2026/06/15"
             shift && exit
             ;;
         --install-mono|mono)
@@ -179,10 +179,13 @@ if [ -n "$TOURNAMENT_MODE" ]; then
 fi
 #—————————— ARENA_MODE ——————————
 if [ -n "$ENABLE_ARENA_MODE" ]; then
+    mkdir -p $SRVPRO_PATH/plugins
     if is_enabled "${ENABLE_ARENA_MODE}"; then
+        cp -rf $SRVPRO_PATH/data-start/login.js $SRVPRO_PATH/plugins/arena_login.js
         patch -N -d $SRVPRO_PATH < $SRVPRO_PATH/data-start/arena-fix.patch
         set_config ".modules.arena_mode.enabled=true"
     else
+        rm -rf $SRVPRO_PATH/plugins/arena_login.js
         patch -R -N -d $SRVPRO_PATH < $SRVPRO_PATH/data-start/arena-fix.patch
         set_config ".modules.arena_mode.enabled=false"
     fi
