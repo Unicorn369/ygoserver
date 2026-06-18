@@ -112,6 +112,12 @@ function setLoggedIn(client, name) {
   loggedInClients.set(client, name);
 }
 
+// ---- 房间是否应启用Arena ----
+function isArenaRoom(room) {
+  if (!room.arena) return false;
+  return true;
+}
+
 // ---- 启动数据库 ----
 initDB();
 
@@ -128,6 +134,7 @@ ygopro.stoc_follow_before(
   async function (buffer, info, client, server, datas) {
     const room = ROOM_all[client.rid];
     if (!room || !dbReady) return;
+    if (!isArenaRoom(room)) return;
 
     const pos = info.status >> 4;
     const state = info.status & 0xf;
@@ -186,6 +193,8 @@ ygopro.ctos_follow_before(
 
     // ---- /reg 密码 ----
     if (msg.substring(0, 4) === "/reg") {
+      if (!isArenaRoom(room)) return;
+
       const password = _.trim(msg.substring(4));
       if (password.length < 1) {
         ygopro.stoc_send_chat(
@@ -220,6 +229,8 @@ ygopro.ctos_follow_before(
 
     // ---- /login 密码 ----
     if (msg.substring(0, 6) === "/login") {
+      if (!isArenaRoom(room)) return;
+
       const password = _.trim(msg.substring(6));
       if (password.length < 1) {
         ygopro.stoc_send_chat(
