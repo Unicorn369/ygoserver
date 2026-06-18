@@ -149,7 +149,7 @@ if [ -n "$ENABLE_WINDBOT_BUILT" ]; then
     if is_enabled "${ENABLE_WINDBOT_BUILT}"; then
         install_mono
         SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-bot-yes.json
-        if [ "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
+        if is_enabled "${ENABLE_API}"; then
             SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-yes.json
         fi
         set_config ".modules.windbot.server_ip=\"127.0.0.1\""
@@ -179,7 +179,7 @@ fi
 if [ -n "$TOURNAMENT_MODE" ]; then
     if is_enabled "${TOURNAMENT_MODE}"; then
         SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-tournament.json
-        if [ "$key" = "true" && "$(jq .users.root.enabled $SRVPRO_PATH/config/admin_user.json)" = 'true' ]; then
+        if is_enabled "${ENABLE_API}"; then
             SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-tournament.json
         fi
         set_config ".modules.tournament_mode.enabled=true"
