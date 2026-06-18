@@ -8,11 +8,57 @@
 ## 安装运行
 安装原版
 ```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/data:/ygoserver/ygopro/expansions -v $PWD/plugins:/ygoserver/plugins -v $PWD/decks:/ygoserver/decks -v $PWD/replays:/ygoserver/replays -v $PWD/logs:/root/.pm2/logs --name=ygoserver --restart=always yunikon525/ygoserver:latest
+docker run -d \
+    -p 7911:7911 \
+    -p 7922:7922 \
+    -v $PWD/config:/ygoserver/config \
+    -v $PWD/data:/ygoserver/ygopro/expansions \
+    -v $PWD/plugins:/ygoserver/plugins \
+    -v $PWD/decks:/ygoserver/decks \
+    -v $PWD/replays:/ygoserver/replays \
+    -v $PWD/logs:/root/.pm2/logs \
+    --name=ygoserver \
+    --restart=always \
+    yunikon525/ygoserver:latest
 ```
 安装koishi版
 ```
-docker run -d -p 7911:7911 -p 7922:7922 -v $PWD/config:/ygoserver/config -v $PWD/data:/ygoserver/ygopro/expansions -v $PWD/plugins:/ygoserver/plugins -v $PWD/decks:/ygoserver/decks -v $PWD/replays:/ygoserver/replays -v $PWD/logs:/root/.pm2/logs --name=ygoserver --restart=always yunikon525/ygoserver:koishi
+docker run -d \
+    -p 7911:7911 \
+    -p 7922:7922 \
+    -v $PWD/config:/ygoserver/config \
+    -v $PWD/data:/ygoserver/ygopro/expansions \
+    -v $PWD/plugins:/ygoserver/plugins \
+    -v $PWD/decks:/ygoserver/decks \
+    -v $PWD/replays:/ygoserver/replays \
+    -v $PWD/logs:/root/.pm2/logs \
+    --name=ygoserver \
+    --restart=always \
+    yunikon525/ygoserver:koishi
+```
+
+## Arena 模式
+已修补`Arena模式`，只需安装并配置 [ygopro-arena-api](https://hub.docker.com/r/yunikon525/ygopro-arena-api) 即可食用，无需开启 `mycard模式`
+
+安装代码参考 (**请先安装 ygopro-arena-api容器，才能使用下代码**)
+```
+docker run -d \
+    -e ENABLE_ARENA_MODE=1 \
+    -e MYCARD_ARENA_MODE="athletic" \
+    -e MYCARD_ARENA_ACCESS_KEY="key_passwd" \
+    -e MYCARD_ARENA_POST_SCORE="http://$(ygopro-arena-api)" \
+    -e MYCARD_ARENA_GET_SCORE="http://$(ygopro-arena-api)" \
+    -p 7911:7911 \
+    -p 7922:7922 \
+    -v $PWD/config:/ygoserver/config \
+    -v $PWD/data:/ygoserver/ygopro/expansions \
+    -v $PWD/plugins:/ygoserver/plugins \
+    -v $PWD/decks:/ygoserver/decks \
+    -v $PWD/replays:/ygoserver/replays \
+    -v $PWD/logs:/root/.pm2/logs \
+    --name=ygoserver \
+    --restart=always \
+    yunikon525/ygoserver:latest
 ```
 
 ## 其他说明
