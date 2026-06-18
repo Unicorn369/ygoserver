@@ -42,6 +42,10 @@ set_config() {
     mv -f "$SRVPRO_PATH/config/config.json.tmp" "$SRVPRO_PATH/config/config.json"
 }
 
+get_config() {
+    cat "$SRVPRO_PATH/config/config.json" | jq $1
+}
+
 set_config_admin() {
     jq $1 "$SRVPRO_PATH/config/admin_user.json" > "$SRVPRO_PATH/config/admin_user.json.tmp"
     mv -f "$SRVPRO_PATH/config/admin_user.json.tmp" "$SRVPRO_PATH/config/admin_user.json"
@@ -74,7 +78,7 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "YGOServer Build 2026/06/15"
+            echo "YGOServer Build 2026/06/18"
             shift && exit
             ;;
         --install-mono|mono)
@@ -116,6 +120,9 @@ if [ -n "$DB_NAME" ]; then
     set_config ".modules.mysql.db.database=\"$DB_NAME\""
 fi
 #—————————— API ——————————
+if [ ! -n "$ENABLE_API" ]; then
+    ENABLE_API=$(get_config .users.root.enabled)
+fi
 if [ -n "$ENABLE_API" ]; then
     if is_enabled "${ENABLE_API}"; then
         SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-web-bot-no.json
@@ -166,6 +173,9 @@ if [ -n "$WINDBOT_SERVER_IP" ]; then
     set_config ".modules.windbot.server_ip=\"$WINDBOT_SERVER_IP\""
 fi
 #—————————— TOURNAMENT_MODE ——————————
+if [ ! -n "$TOURNAMENT_MODE" ]; then
+    TOURNAMENT_MODE=$(get_config .modules.tournament_mode.enabled)
+fi
 if [ -n "$TOURNAMENT_MODE" ]; then
     if is_enabled "${TOURNAMENT_MODE}"; then
         SRVPRO_SCRIPT=$SRVPRO_PATH/data-start/pm2-docker-tournament.json
@@ -178,6 +188,9 @@ if [ -n "$TOURNAMENT_MODE" ]; then
     fi
 fi
 #—————————— ARENA_MODE ——————————
+if [ ! -n "$ENABLE_ARENA_MODE" ]; then
+    ENABLE_ARENA_MODE=$(get_config .modules.arena_mode.enabled)
+fi
 if [ -n "$ENABLE_ARENA_MODE" ]; then
     mkdir -p $SRVPRO_PATH/plugins
     if is_enabled "${ENABLE_ARENA_MODE}"; then

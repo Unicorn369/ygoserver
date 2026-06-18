@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const DB_PATH = path.resolve(process.cwd(), "config", "ygo-user.db");
+const DB_PATH = path.resolve(process.cwd(), "config", "ygo_user.db");
 
 // ---- 数据库 ----
 let db = null;
