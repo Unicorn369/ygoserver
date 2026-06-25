@@ -1,8 +1,8 @@
 diff --git a/ygopro-server.js b/ygopro-server.js
-index 32c78db..18d45fd 100644
+index 5f921a1..23c0c2d 100644
 --- a/ygopro-server.js
 +++ b/ygopro-server.js
-@@ -3208,6 +3208,53 @@
+@@ -2992,6 +2992,53 @@
      //log.info info
      info.pass = info.pass.trim();
      client.pass = info.pass;
@@ -56,7 +56,7 @@ index 32c78db..18d45fd 100644
      if (CLIENT_is_able_to_reconnect(client) || CLIENT_is_able_to_kick_reconnect(client)) {
        CLIENT_pre_reconnect(client);
        return;
-@@ -3640,7 +3687,25 @@
+@@ -3432,7 +3479,25 @@
      if (room.welcome2) {
        ygopro.stoc_send_chat(client, room.welcome2, ygopro.constants.COLORS.PINK);
      }
