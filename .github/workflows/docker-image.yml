@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "koishi" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "koishi" ]
+    branches: [ "main" ]
 
 jobs:
   docker:
@@ -23,10 +23,10 @@ jobs:
 
       - name: Download Data
         run: |
-          wget -O ygopro.zip https://github.com/purerosefallen/ygopro/archive/refs/heads/server.zip
-          wget -O ocgcore.zip https://github.com/purerosefallen/ygopro-core/archive/refs/heads/master.zip
-          wget -O script.zip https://github.com/Smile-DK/ygopro-scripts/archive/refs/heads/master.zip
-          wget -O srvpro.zip https://github.com/purerosefallen/srvpro/archive/refs/heads/master.zip
+          wget -O ocgcore.zip https://github.com/Fluorohydride/ygopro-core/archive/refs/heads/master.zip
+          wget -O script.zip https://github.com/Fluorohydride/ygopro-scripts/archive/refs/heads/master.zip
+          wget -O ygopro.zip https://github.com/mycard/ygopro/archive/refs/heads/server.zip
+          wget -O srvpro.zip https://github.com/mycard/srvpro/archive/refs/heads/master.zip
           unzip -o -qq ygopro.zip
           unzip -o -qq ocgcore.zip
           unzip -o -qq script.zip
@@ -132,6 +132,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/ygoserver
+          tags: |
+            type=raw,value=latest
+            type=raw,value=latest-{{date 'YYYYMMDD'}}
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -139,7 +148,8 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64, linux/arm64, linux/arm
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ygoserver:koishi
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             SRVPRO_PATH=./srvpro
             YGOPRO_PATH=./ygopro-bin
