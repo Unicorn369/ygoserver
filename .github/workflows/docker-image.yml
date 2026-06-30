@@ -23,9 +23,9 @@ jobs:
 
       - name: Download Data
         run: |
+          wget -O ocgcore.zip https://github.com/Fluorohydride/ygopro-core/archive/refs/heads/master.zip
+          wget -O script.zip https://github.com/Fluorohydride/ygopro-scripts/archive/refs/heads/master.zip
           wget -O ygopro.zip https://github.com/mycard/ygopro/archive/refs/heads/server.zip
-          wget -O ocgcore.zip https://github.com/mycard/ygopro-core/archive/refs/heads/master.zip
-          wget -O script.zip https://github.com/mycard/ygopro-scripts/archive/refs/heads/master.zip
           wget -O srvpro.zip https://github.com/mycard/srvpro/archive/refs/heads/master.zip
           unzip -o -qq ygopro.zip
           unzip -o -qq ocgcore.zip
@@ -132,6 +132,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/ygoserver
+          tags: |
+            type=raw,value=latest
+            type=raw,value=latest-{{date 'YYYYMMDD'}}
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -139,7 +148,8 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64, linux/arm64, linux/arm
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ygoserver:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             SRVPRO_PATH=./srvpro
             YGOPRO_PATH=./ygopro-bin
