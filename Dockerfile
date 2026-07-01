@@ -7,9 +7,11 @@ RUN apk add --no-cache python3 make g++
 RUN npm ci
 RUN npm run build
 RUN npm install --prefix /opt/local -g pm2
+
 RUN mkdir -p app
 RUN cp -rf dist app/
 RUN cp -rf node_modules app/
+RUN cp -rf resource app/
 RUN cp -rf package*.json app/
 RUN cp -rf config.example.yaml app/config.yaml
 
@@ -22,8 +24,8 @@ ARG INIT_FILE_PATH
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /srvpro/app /ygoserver
 COPY --from=builder /opt/local /usr/
-COPY ${YGOPRO_PATH}/ygopro /ygoserver/ygopro
-COPY ${YGOPRO_PATH}/libocgcore.wasm /ygoserver/libocgcore.wasm
+
+COPY ${YGOPRO_PATH}/ /ygoserver/
 COPY ${INIT_FILE_PATH} /run.sh
 
 RUN chmod +x /run.sh

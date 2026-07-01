@@ -43,7 +43,8 @@ jobs:
 
       - name: Organize Data
         run: |
-          mkdir -p ygopro-data
+          mkdir -p ygopro-data/windbot
+          wget -O ygopro-data/windbot/bots.json https://github.com/mycard/windbot/raw/refs/heads/master/bots.json
           cp -rf ygopro/ocgcore/build/bin/wasm_cjs/Release/libocgcore.wasm ygopro-data/
           rm -rf ygopro/ocgcore
           mv -f ygopro ygopro-data/
