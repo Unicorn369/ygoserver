@@ -26,7 +26,7 @@ jobs:
           unzip -o -qq srvpro.zip
           mv -f ygopro-core-master ygopro/ocgcore
           mv -f ygopro-scripts-master ygopro/script
-          mv -f srvpro2-master srvpro
+          mv -f srvpro2-master srvpro2
           rm -rf ocgcore.zip script.zip srvpro.zip
 
       - name: Build OCGCORE
@@ -43,10 +43,10 @@ jobs:
 
       - name: Organize Data
         run: |
-          mkdir -p ygoserver
-          cp -rf ygopro/ocgcore/build/bin/wasm_cjs/Release/libocgcore.wasm ygoserver/
+          mkdir -p ygopro-data
+          cp -rf ygopro/ocgcore/build/bin/wasm_cjs/Release/libocgcore.wasm ygopro-data/
           rm -rf ygopro/ocgcore
-          mv -f ygopro ygoserver/
+          mv -f ygopro ygopro-data/
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
@@ -79,6 +79,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            SRVPRO_PATH=./srvpro
-            YGOPRO_PATH=./ygoserver
+            SRVPRO_PATH=./srvpro2
+            YGOPRO_PATH=./ygopro-data
             INIT_FILE_PATH=./init.sh
