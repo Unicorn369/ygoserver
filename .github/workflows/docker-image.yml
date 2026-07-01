@@ -13,14 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download musl-tools
-        run: |
-          mkdir -p /opt
-          wget -O tools.tar.xz https://github.com/Unicorn369/ygoserver/releases/download/v0.0.1/linux-musl-tools.tar.xz
-          tar xf tools.tar.xz
-          mv -f linux-musl-tools /opt/
-          rm -rf tools.tar.xz
-
       - name: Download Data
         run: |
           mkdir -p ygopro
@@ -31,6 +23,7 @@ jobs:
           wget -O srvpro.zip https://github.com/purerosefallen/srvpro2/archive/refs/heads/master.zip
           unzip -o -qq ocgcore.zip
           unzip -o -qq script.zip
+          unzip -o -qq srvpro.zip
           mv -f ygopro-core-master ygopro/ocgcore
           mv -f ygopro-scripts-master ygopro/script
           mv -f srvpro2-master srvpro
@@ -38,7 +31,7 @@ jobs:
 
       - name: Build OCGCORE
         run: |
-          apt-get install -y --no-install-recommends build-essential emscripten uuid-dev
+          sudo apt-get install -y --no-install-recommends build-essential emscripten uuid-dev
           cp -rf dep/lua ygopro/ocgcore/
           cd ygopro/ocgcore
           wget -O premake5 https://github.com/Unicorn369/ygoserver/releases/download/v0.0.1/premake5-linux-musl
@@ -73,8 +66,8 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/ygoserver
           tags: |
-            type=raw,value=latest
-            type=raw,value=latest-{{date 'YYYYMMDD'}}
+            type=raw,value=srvpro2
+            type=raw,value=srvpro2-{{date 'YYYYMMDD'}}
 
       - name: Build and push
         uses: docker/build-push-action@v6

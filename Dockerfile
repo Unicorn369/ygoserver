@@ -7,7 +7,7 @@ RUN apk add --no-cache python3 make g++
 RUN npm ci
 RUN npm run build
 RUN npm install --prefix /opt/local -g pm2
-RUM mkdir app
+RUN mkdir -p app
 COPY dist app/
 COPY node_modules app/
 COPY package*.json app/
