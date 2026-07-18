@@ -32,7 +32,7 @@ fi
 for arg in "$@"; do
     case $arg in
         --version)
-            echo "SRVPro2 2026/07/01"
+            echo "SRVPro2 2026/07/18"
             shift && exit
             ;;
         -*|--*)
