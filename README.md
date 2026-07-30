@@ -36,6 +36,21 @@ docker run -d \
     --restart=always \
     yunikon525/ygoserver:koishi
 ```
+安装SRVPro2
+```
+docker run -d \
+    -p 7911:7911 \
+    -p 7922:7922 \
+    -v $PWD/config:/ygoserver/config \
+    -v $PWD/data:/ygoserver/ygopro/expansions \
+    -v $PWD/plugins:/ygoserver/plugins \
+    -v $PWD/decks:/ygoserver/decks \
+    -v $PWD/replays:/ygoserver/replays \
+    -v $PWD/logs:/root/.pm2/logs \
+    --name=ygoserver \
+    --restart=always \
+    yunikon525/ygoserver:srvpro2
+```
 
 ## Arena 模式
 已修补`Arena模式`，只需安装并配置 [ygopro-arena-api](https://hub.docker.com/r/yunikon525/ygopro-arena-api) 即可食用，无需开启 `mycard模式`
