@@ -63,10 +63,10 @@ jobs:
           export CXX=$CHOST-c++
           export LD=$CHOST-ld
           export STRIP=$CHOST-strip
-          cd ygopro/build/
-          rm -rf ../bin/ ../obj/
-          make config=release -j$(grep -c "processor" /proc/cpuinfo)
-          mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-amd64
+          cd ygopro/
+          rm -rf bin obj
+          make -C build config=release -j$(grep -c "processor" /proc/cpuinfo)
+          mv -f bin/release/ygopro ../ygopro-bin/ygopro-amd64
 
       - name: Build Ygopro arm64
         run: |
@@ -77,10 +77,10 @@ jobs:
           export CXX=$CHOST-c++
           export LD=$CHOST-ld
           export STRIP=$CHOST-strip
-          cd ygopro/build/
-          rm -rf ../bin/ ../obj/
-          make config=release -j$(grep -c "processor" /proc/cpuinfo)
-          mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm64
+          cd ygopro/
+          rm -rf bin obj
+          make -C build config=release -j$(grep -c "processor" /proc/cpuinfo)
+          mv -f bin/release/ygopro ../ygopro-bin/ygopro-arm64
 
       - name: Build Ygopro arm
         run: |
@@ -91,10 +91,10 @@ jobs:
           export CXX=$CHOST-c++
           export LD=$CHOST-ld
           export STRIP=$CHOST-strip
-          cd ygopro/build/
-          rm -rf ../bin/ ../obj/
-          make config=release -j$(grep -c "processor" /proc/cpuinfo)
-          mv -f ../bin/release/ygopro ../../ygopro-bin/ygopro-arm
+          cd ygopro/
+          rm -rf bin obj
+          make -C build config=release -j$(grep -c "processor" /proc/cpuinfo)
+          mv -f bin/release/ygopro ../ygopro-bin/ygopro-arm
 
       - name: Build WindBot
         run: |

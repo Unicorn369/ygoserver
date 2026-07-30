@@ -150,8 +150,18 @@ ygopro.stoc_follow_before(
     if (!user) {
       ygopro.stoc_send_chat(
         client,
-        "【YGO-USER】用户不存在，请先使用 /reg 密码 注册账号后再准备。已断开连接",
+        "【YGO-USER】用户不存在。已断开连接",
         ygopro.constants.COLORS.RED
+      );
+      ygopro.stoc_send_chat(
+        client,
+        "【YGO-USER】请注册后再准备",
+        ygopro.constants.COLORS.YELLOW
+      );
+      ygopro.stoc_send_chat(
+        client,
+        "【YGO-USER】请使用\"/reg  密码\" 或 \"/zc  密码\" 注册",
+        ygopro.constants.COLORS.YELLOW
       );
       CLIENT_kick(client);
       return;
@@ -171,8 +181,18 @@ ygopro.stoc_follow_before(
     // IP不匹配
     ygopro.stoc_send_chat(
       client,
-      "【YGO-USER】检测到IP变更，请使用 /login 密码 登录后再准备。已断开连接",
+      "【YGO-USER】检测到IP变更。已断开连接",
       ygopro.constants.COLORS.RED
+    );
+    ygopro.stoc_send_chat(
+      client,
+      "【YGO-USER】请登录后再准备",
+      ygopro.constants.COLORS.YELLOW
+    );
+    ygopro.stoc_send_chat(
+      client,
+      "【YGO-USER】请使用\"/login  密码\" 或 \"/dl  密码\" 登录",
+      ygopro.constants.COLORS.YELLOW
     );
     CLIENT_kick(client);
   }
@@ -192,7 +212,7 @@ ygopro.ctos_follow_before(
     const msg = _.trim(info.msg);
 
     // ---- /reg 密码 ----
-    if (msg.substring(0, 4) === "/reg") {
+    if (msg.substring(0, 4) === "/reg" || msg.substring(0, 3) === "/zc" || msg.substring(0, 3) === "/注册") {
       if (!isArenaRoom(room)) return;
 
       const password = _.trim(msg.substring(4));
@@ -210,7 +230,12 @@ ygopro.ctos_follow_before(
       if (existing) {
         ygopro.stoc_send_chat(
           client,
-          "【YGO-USER】用户名 " + name + " 已被注册。如果是你的账号，请用 /login 密码 登录。如果忘记密码，请联系管理员",
+          "【YGO-USER】用户名 " + name + " 已被注册。如果是你的账号，请用 \"/login  密码\" 登录",
+          ygopro.constants.COLORS.RED
+        );
+        ygopro.stoc_send_chat(
+          client,
+          "【YGO-USER】忘记密码或修改密码，请联系管理员",
           ygopro.constants.COLORS.RED
         );
         return true;
@@ -228,14 +253,14 @@ ygopro.ctos_follow_before(
     }
 
     // ---- /login 密码 ----
-    if (msg.substring(0, 6) === "/login") {
+    if (msg.substring(0, 6) === "/login" || msg.substring(0, 3) === "/dl" || msg.substring(0, 3) === "/登录") {
       if (!isArenaRoom(room)) return;
 
       const password = _.trim(msg.substring(6));
       if (password.length < 1) {
         ygopro.stoc_send_chat(
           client,
-          "【YGO-USER】请以 /login 密码 的格式登录",
+          "【YGO-USER】请以 \"/login  密码\" 的格式登录",
           ygopro.constants.COLORS.YELLOW
         );
         return true;
@@ -246,7 +271,7 @@ ygopro.ctos_follow_before(
       if (!user) {
         ygopro.stoc_send_chat(
           client,
-          "【YGO-USER】用户不存在，请先用 /reg 密码 注册",
+          "【YGO-USER】用户不存在，请先用 \"/reg  密码\" 注册",
           ygopro.constants.COLORS.RED
         );
         return true;
