@@ -35,6 +35,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/windbot
+          tags: |
+            type=raw,value=latest
+            type=raw,value=latest-{{date 'YYYYMMDD'}}
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -42,6 +51,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64, linux/arm64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/windbot:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             WINDBOT_PATH=./windbot
