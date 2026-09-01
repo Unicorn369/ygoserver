@@ -66,6 +66,7 @@ jobs:
           cd ygopro/
           rm -rf bin obj
           make -C build config=release -j$(grep -c "processor" /proc/cpuinfo)
+          x86_64-linux-musl-strip bin/release/ygopro
           mv -f bin/release/ygopro ../ygopro-bin/ygopro-amd64
 
       - name: Build Ygopro arm64
@@ -80,21 +81,23 @@ jobs:
           cd ygopro/
           rm -rf bin obj
           make -C build config=release -j$(grep -c "processor" /proc/cpuinfo)
+          aarch64-linux-musl-strip bin/release/ygopro
           mv -f bin/release/ygopro ../ygopro-bin/ygopro-arm64
 
-      - name: Build Ygopro arm
-        run: |
-          export PATH=$PATH:/opt/linux-musl-tools/bin
-          export CHOST=arm-linux-musleabihf
-          export AR=$CHOST-ar
-          export CC=$CHOST-cc
-          export CXX=$CHOST-c++
-          export LD=$CHOST-ld
-          export STRIP=$CHOST-strip
-          cd ygopro/
-          rm -rf bin obj
-          make -C build config=release -j$(grep -c "processor" /proc/cpuinfo)
-          mv -f bin/release/ygopro ../ygopro-bin/ygopro-arm
+      #- name: Build Ygopro arm
+      #  run: |
+      #    export PATH=$PATH:/opt/linux-musl-tools/bin
+      #    export CHOST=arm-linux-musleabihf
+      #    export AR=$CHOST-ar
+      #    export CC=$CHOST-cc
+      #    export CXX=$CHOST-c++
+      #    export LD=$CHOST-ld
+      #    export STRIP=$CHOST-strip
+      #    cd ygopro/
+      #    rm -rf bin obj
+      #    make -C build config=release -j$(grep -c "processor" /proc/cpuinfo)
+      #    arm-linux-musleabihf-strip bin/release/ygopro
+      #    mv -f bin/release/ygopro ../ygopro-bin/ygopro-arm
 
       - name: Build WindBot
         run: |
@@ -108,12 +111,8 @@ jobs:
 
       - name: Organize Data
         run: |
-          export PATH=$PATH:/opt/linux-musl-tools/bin
           cp -rf web srvpro/
           cp -rf data-start srvpro/
-          x86_64-linux-musl-strip  ygopro-bin/ygopro-amd64
-          aarch64-linux-musl-strip ygopro-bin/ygopro-arm64
-          arm-linux-musleabihf-strip ygopro-bin/ygopro-arm
           rm -rf windbot/sqlite3.dll
           mv -f windbot srvpro/ && mv -f ygopro srvpro/
           cd srvpro/ygopro/
@@ -146,7 +145,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64, linux/arm64, linux/arm
+          platforms: linux/amd64, linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
