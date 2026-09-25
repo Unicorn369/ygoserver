@@ -1,5 +1,5 @@
 # Docker-YGOServer
-在Docker容器中运行 [ygopro-server](https://github.com/mycard/srvpro) 或 [edopro-server](https://github.com/DyXel/Multirole)，支持x64、arm64与arm32架构
+在Docker容器中运行 [ygopro-server](https://github.com/mycard/srvpro) 或 [edopro-server](https://github.com/DyXel/Multirole)，支持x64、arm64架构
 
 如果你要安装的是 [EDOPro](https://github.com/edo9300/edopro) 服务器，请看 --> [这里](https://github.com/Unicorn369/ygoserver/tree/edo)
 
